@@ -15,10 +15,10 @@
                 <p>Create professional PBR texture maps instantly</p>
             </div>
             <div class="nav-actions">
-                <button id="export-zip" class="primary-btn">
+                <button id="export-zip" class="action-btn">
                     <i class="fas fa-file-archive"></i> Export All Maps as ZIP
                 </button>
-                <button id="export-threejs" class="secondary-btn">
+                <button id="export-threejs" class="action-btn">
                     <i class="fas fa-code"></i> Export Three.js Code
                 </button>
             </div>
@@ -47,11 +47,15 @@
                     <div class="rotation-controls">
                         <div class="rotation-group">
                             <label>Manual Rotation:</label>
-                            <div class="rotation-buttons">
-                                <button id="rotate-left" class="rotation-btn" title="Rotate Left"><i class="fas fa-arrow-left"></i></button>
-                                <button id="rotate-right" class="rotation-btn" title="Rotate Right"><i class="fas fa-arrow-right"></i></button>
-                                <button id="rotate-up" class="rotation-btn" title="Rotate Up"><i class="fas fa-arrow-up"></i></button>
-                                <button id="rotate-down" class="rotation-btn" title="Rotate Down"><i class="fas fa-arrow-down"></i></button>
+                            <div class="rotation-sliders">
+                                <div class="rotation-slider">
+                                    <span>X</span>
+                                    <input type="range" id="rotation-x" min="-3.14" max="3.14" step="0.01" value="0">
+                                </div>
+                                <div class="rotation-slider">
+                                    <span>Y</span>
+                                    <input type="range" id="rotation-y" min="-3.14" max="3.14" step="0.01" value="0">
+                                </div>
                                 <button id="toggle-auto-rotate" class="rotation-btn" title="Toggle Auto-Rotation"><i class="fas fa-sync-alt"></i></button>
                             </div>
                         </div>
