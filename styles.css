@@ -174,6 +174,7 @@ code, pre {
 .nav-actions {
     display: flex;
     gap: 0.75rem;
+    margin-top: 0.75rem;
 }
 
 .export-zip-btn {
@@ -365,53 +366,6 @@ code, pre {
     border: 1px solid var(--border-color);
     display: flex;
     flex-direction: column;
-}
-
-.preview-model-controls {
-    position: absolute;
-    top: 0.75rem;
-    left: 0.75rem;
-    z-index: 10;
-    background-color: rgba(1, 4, 9, 0.75);
-    border-radius: 6px;
-    backdrop-filter: blur(8px);
-    padding: 0.4rem;
-    border: 1px solid var(--border-color);
-}
-
-.model-selector {
-    display: flex;
-    gap: 0.35rem;
-}
-
-.model-btn {
-    background-color: var(--bg-dark);
-    color: var(--text-secondary);
-    border: 1px solid var(--border-color);
-    padding: 0.35rem 0.6rem;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.75rem;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
-    transition: all var(--transition-normal);
-}
-
-.model-btn:hover {
-    background-color: var(--bg-light);
-    color: var(--text-primary);
-}
-
-.model-btn.active {
-    background-color: var(--primary-blue);
-    color: var(--text-primary);
-    border-color: var(--primary-blue-hover);
-}
-
-.model-btn i {
-    font-size: 0.75rem;
 }
 
 #model-container {
@@ -655,68 +609,55 @@ input[type="range"]::-moz-range-thumb:hover {
     gap: 1rem;
 }
 
-/* Toggle Switch Styling */
-.toggle-switch-container {
+/* Improved Checkbox Styling */
+.export-checkbox {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    gap: 0.75rem;
     background-color: var(--bg-darker);
-    padding: 0.75rem 1rem;
+    padding: 0.75rem 1.25rem;
     border-radius: 6px;
     border: 1px solid var(--border-color);
-    min-width: 200px;
+    transition: border-color var(--transition-normal), transform var(--transition-fast);
 }
 
-.toggle-label {
-    font-size: 0.9rem;
+.export-checkbox:hover {
+    border-color: var(--primary-blue);
+    transform: translateY(-2px);
+}
+
+.export-checkbox input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--border-color);
+    border-radius: 4px;
+    background-color: var(--bg-dark);
+    position: relative;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+}
+
+.export-checkbox input[type="checkbox"]:checked {
+    background-color: var(--primary-green);
+    border-color: var(--primary-green);
+}
+
+.export-checkbox input[type="checkbox"]:checked::after {
+    content: '✓';
+    position: absolute;
+    color: white;
+    font-size: 14px;
+    top: -2px;
+    left: 3px;
+}
+
+.export-checkbox label {
+    font-size: 0.95rem;
     font-weight: 600;
     color: var(--text-secondary);
     cursor: pointer;
-}
-
-.toggle-switch {
-    position: relative;
-    display: inline-block;
-    width: 44px;
-    height: 24px;
-    cursor: pointer;
-}
-
-.toggle-switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-
-.toggle-slider {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: var(--border-color);
-    transition: var(--transition-normal);
-    border-radius: 24px;
-}
-
-.toggle-slider:before {
-    position: absolute;
-    content: "";
-    height: 18px;
-    width: 18px;
-    left: 3px;
-    bottom: 3px;
-    background-color: var(--text-primary);
-    transition: var(--transition-normal);
-    border-radius: 50%;
-}
-
-input:checked + .toggle-slider {
-    background-color: var(--primary-green);
-}
-
-input:checked + .toggle-slider:before {
-    transform: translateX(20px);
 }
 
 /* === Maps Section === */
