@@ -217,8 +217,7 @@ document.addEventListener('DOMContentLoaded', function() {
             normal: !!material.normalMap,
             roughness: !!material.roughnessMap,
             displacement: !!material.displacementMap,
-            ao: !!material.aoMap,
-            opacity: !!material.alphaMap
+            ao: !!material.aoMap
         });
     }
     
@@ -365,19 +364,33 @@ document.addEventListener('DOMContentLoaded', function() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
     
-    // Handle file upload
+    // Handle file upload - Added as a backup method to ensure file uploads work
     function handleFileUpload(e) {
-        if (e.target.files.length) {
-            processUploadedFile(e.target.files[0]);
+        console.log("File input change detected");
+        if (e.target.files && e.target.files.length) {
+            currentFile = e.target.files[0];
+            console.log("Processing file:", currentFile.name);
+            processUploadedFile(currentFile);
+        } else {
+            console.log("No files selected in the file input");
         }
     }
     
     // Process uploaded file
     function processUploadedFile(file) {
+        console.log("Processing file:", file ? file.name : "No file");
+        
+        if (!file) {
+            showNotification('No file selected. Please try again.', 'error');
+            return;
+        }
+        
         if (!file.type.match('image.*')) {
             showNotification('Please upload an image file.', 'error');
             return;
         }
+        
+        console.log("File type valid:", file.type);
         
         // Show loading state
         uploadArea.classList.add('processing');
