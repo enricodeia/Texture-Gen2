@@ -19,6 +19,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const deleteImageBtn = document.getElementById('delete-image');
     const sphereContainer = document.getElementById('sphere-container');
     
+    // Navigation Tabs
+    const navTabs = document.querySelectorAll('.nav-tab');
+    const pages = document.querySelectorAll('.page-content');
+    
     // Rotation controls
     const rotationX = document.getElementById('rotation-x');
     const rotationY = document.getElementById('rotation-y');
@@ -57,6 +61,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const downloadDisplacement = document.getElementById('download-displacement');
     const downloadAO = document.getElementById('download-ao');
     const exportZip = document.getElementById('export-zip');
+    const exportThreejs = document.getElementById('export-threejs');
     
     // Export options
     const exportBase = document.getElementById('export-base');
@@ -90,10 +95,35 @@ document.addEventListener('DOMContentLoaded', function() {
             // Set up event listeners
             setupEventListeners();
             
+            // Set up page navigation
+            setupNavigation();
+            
         } catch (error) {
             console.error('Error initializing application:', error);
             showNotification('Error initializing application. Please refresh the page.', 'error');
         }
+    }
+    
+    // Set up page navigation
+    function setupNavigation() {
+        navTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Remove active class from all tabs
+                navTabs.forEach(t => t.classList.remove('active'));
+                
+                // Add active class to clicked tab
+                tab.classList.add('active');
+                
+                // Get target page
+                const targetPage = tab.dataset.page;
+                
+                // Hide all pages
+                pages.forEach(page => page.classList.add('hidden'));
+                
+                // Show target page
+                document.getElementById(`${targetPage}-page`).classList.remove('hidden');
+            });
+        });
     }
     
     // Initialize Three.js scene
@@ -318,9 +348,8 @@ document.addEventListener('DOMContentLoaded', function() {
         exportZip.addEventListener('click', exportAllMapsAsZip);
         
         // Export Three.js code
-        const exportThreejsBtn = document.getElementById('export-threejs');
-        if (exportThreejsBtn) {
-            exportThreejsBtn.addEventListener('click', exportThreejsCode);
+        if (exportThreejs) {
+            exportThreejs.addEventListener('click', exportThreejsCode);
         }
         
         // Rotation controls
