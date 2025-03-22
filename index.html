@@ -34,8 +34,8 @@
                         </div>
                         <div class="preview-overlay" id="preview-overlay">
                             <img id="uploaded-image" src="" alt="Uploaded texture">
-                            <button class="delete-btn" id="delete-image">
-                                <i class="fas fa-times"></i>
+                            <button class="change-btn" id="change-image">
+                                <i class="fas fa-sync-alt"></i> Change
                             </button>
                         </div>
                     </div>
@@ -98,10 +98,10 @@
                     </div>
                     
                     <div class="control-group">
-                        <label for="opacity-threshold">Opacity Threshold</label>
+                        <label for="texture-scale">Texture Scale</label>
                         <div class="slider-container">
-                            <input type="range" id="opacity-threshold" min="0" max="1" step="0.01" value="0.5">
-                            <span class="value" id="opacity-value">0.5</span>
+                            <input type="range" id="texture-scale" min="0.5" max="5" step="0.1" value="1">
+                            <span class="value" id="scale-value">1.0</span>
                         </div>
                     </div>
                     
@@ -148,10 +148,7 @@
                         <input type="checkbox" id="export-ao" checked>
                         <label for="export-ao">Ambient Occlusion</label>
                     </div>
-                    <div class="export-checkbox">
-                        <input type="checkbox" id="export-opacity">
-                        <label for="export-opacity">Opacity</label>
-                    </div>
+
                 </div>
             </div>
 
@@ -201,15 +198,7 @@
                     </div>
                     <canvas id="ao-map"></canvas>
                 </div>
-                <div class="map-preview">
-                    <div class="map-header">
-                        <h3>Opacity Map</h3>
-                        <button class="download-btn" id="download-opacity">
-                            <i class="fas fa-download"></i>
-                        </button>
-                    </div>
-                    <canvas id="opacity-map"></canvas>
-                </div>
+
             </div>
         </main>
 
