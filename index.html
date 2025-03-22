@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Texture Gen v2</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <nav class="navbar">
+            <div class="nav-brand">
+                <h1>Texture Gen v2</h1>
+                <p>Create professional PBR texture maps instantly</p>
+            </div>
+            <div class="nav-actions">
+                <button id="export-zip" class="primary-btn">
+                    <i class="fas fa-file-archive"></i> Export All Maps as ZIP
+                </button>
+            </div>
+        </nav>
+
+        <main>
+            <div class="top-container">
+                <div class="upload-section">
+                    <div class="upload-area" id="upload-area">
+                        <div class="upload-content">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>Drag & drop your texture image or</p>
+                            <label for="texture-upload" class="upload-btn">Browse Files</label>
+                            <input type="file" id="texture-upload" accept="image/*" hidden>
+                            <p class="upload-hint">Supported formats: JPG, PNG, WebP</p>
+                        </div>
+                        <div class="preview-overlay" id="preview-overlay">
+                            <img id="uploaded-image" src="" alt="Uploaded texture">
+                            <button class="delete-btn" id="delete-image">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="preview-3d">
+                    <div id="sphere-container"></div>
+                </div>
+            </div>
+
+            <div class="controls-container">
+                <h3>Texture Settings</h3>
+                <div class="controls-grid">
+                    <div class="control-group">
+                        <label for="base-strength">Base Color Strength</label>
+                        <div class="slider-container">
+                            <input type="range" id="base-strength" min="0" max="1" step="0.01" value="1">
+                            <span class="value" id="base-value">1.0</span>
+                        </div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="normal-strength">Normal Strength</label>
+                        <div class="slider-container">
+                            <input type="range" id="normal-strength" min="0" max="2" step="0.01" value="1">
+                            <span class="value" id="normal-value">1.0</span>
+                        </div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="roughness-strength">Roughness Strength</label>
+                        <div class="slider-container">
+                            <input type="range" id="roughness-strength" min="0" max="1" step="0.01" value="0.5">
+                            <span class="value" id="roughness-value">0.5</span>
+                        </div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="displacement-strength">Displacement Strength</label>
+                        <div class="slider-container">
+                            <input type="range" id="displacement-strength" min="0" max="1" step="0.01" value="0.2">
+                            <span class="value" id="displacement-value">0.2</span>
+                        </div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="ao-strength">AO Strength</label>
+                        <div class="slider-container">
+                            <input type="range" id="ao-strength" min="0" max="1" step="0.01" value="0.5">
+                            <span class="value" id="ao-value">0.5</span>
+                        </div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="metalness">Metalness</label>
+                        <div class="slider-container">
+                            <input type="range" id="metalness" min="0" max="1" step="0.01" value="0">
+                            <span class="value" id="metalness-value">0.0</span>
+                        </div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="opacity-threshold">Opacity Threshold</label>
+                        <div class="slider-container">
+                            <input type="range" id="opacity-threshold" min="0" max="1" step="0.01" value="0.5">
+                            <span class="value" id="opacity-value">0.5</span>
+                        </div>
+                    </div>
+                    
+                    <div class="control-group light-group">
+                        <label>Light Position</label>
+                        <div class="light-controls">
+                            <div class="light-control">
+                                <span>X</span>
+                                <input type="range" id="light-x" min="-10" max="10" step="0.1" value="5">
+                            </div>
+                            <div class="light-control">
+                                <span>Y</span>
+                                <input type="range" id="light-y" min="-10" max="10" step="0.1" value="5">
+                            </div>
+                            <div class="light-control">
+                                <span>Z</span>
+                                <input type="range" id="light-z" min="-10" max="10" step="0.1" value="5">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="export-options">
+                <h3>Export Options</h3>
+                <div class="export-container">
+                    <div class="export-checkbox">
+                        <input type="checkbox" id="export-base" checked>
+                        <label for="export-base">Base Color</label>
+                    </div>
+                    <div class="export-checkbox">
+                        <input type="checkbox" id="export-normal" checked>
+                        <label for="export-normal">Normal</label>
+                    </div>
+                    <div class="export-checkbox">
+                        <input type="checkbox" id="export-roughness" checked>
+                        <label for="export-roughness">Roughness</label>
+                    </div>
+                    <div class="export-checkbox">
+                        <input type="checkbox" id="export-displacement" checked>
+                        <label for="export-displacement">Displacement</label>
+                    </div>
+                    <div class="export-checkbox">
+                        <input type="checkbox" id="export-ao" checked>
+                        <label for="export-ao">Ambient Occlusion</label>
+                    </div>
+                    <div class="export-checkbox">
+                        <input type="checkbox" id="export-opacity">
+                        <label for="export-opacity">Opacity</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="map-container">
+                <div class="map-preview">
+                    <div class="map-header">
+                        <h3>Base Color Map</h3>
+                        <button class="download-btn" id="download-base">
+                            <i class="fas fa-download"></i>
+                        </button>
+                    </div>
+                    <canvas id="base-map"></canvas>
+                </div>
+                <div class="map-preview">
+                    <div class="map-header">
+                        <h3>Normal Map</h3>
+                        <button class="download-btn" id="download-normal">
+                            <i class="fas fa-download"></i>
+                        </button>
+                    </div>
+                    <canvas id="normal-map"></canvas>
+                </div>
+                <div class="map-preview">
+                    <div class="map-header">
+                        <h3>Roughness Map</h3>
+                        <button class="download-btn" id="download-roughness">
+                            <i class="fas fa-download"></i>
+                        </button>
+                    </div>
+                    <canvas id="roughness-map"></canvas>
+                </div>
+                <div class="map-preview">
+                    <div class="map-header">
+                        <h3>Displacement Map</h3>
+                        <button class="download-btn" id="download-displacement">
+                            <i class="fas fa-download"></i>
+                        </button>
+                    </div>
+                    <canvas id="displacement-map"></canvas>
+                </div>
+                <div class="map-preview">
+                    <div class="map-header">
+                        <h3>AO Map</h3>
+                        <button class="download-btn" id="download-ao">
+                            <i class="fas fa-download"></i>
+                        </button>
+                    </div>
+                    <canvas id="ao-map"></canvas>
+                </div>
+                <div class="map-preview">
+                    <div class="map-header">
+                        <h3>Opacity Map</h3>
+                        <button class="download-btn" id="download-opacity">
+                            <i class="fas fa-download"></i>
+                        </button>
+                    </div>
+                    <canvas id="opacity-map"></canvas>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>Designed by <a href="https://enricodeiana.design/" target="_blank">Enrico Deiana</a></p>
+        </footer>
+    </div>
+
+    <!-- Load necessary libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <!-- Main script -->
+    <script src="script.js"></script>
+</body>
+</html>
