@@ -224,20 +224,19 @@ main {
 }
 
 .rotation-controls {
-    padding: 8px;
-    background-color: rgba(1, 4, 9, 0.7);
+    padding: 8px 12px;
+    background-color: rgba(1, 4, 9, 0.8);
     border-top: 1px solid var(--border-color);
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
+    width: 100%;
 }
 
 .rotation-group {
     display: flex;
     align-items: center;
-    gap: 15px;
     width: 100%;
-    max-width: 90%;
 }
 
 .rotation-group label {
@@ -245,27 +244,29 @@ main {
     color: var(--text-primary);
     font-weight: 600;
     white-space: nowrap;
+    margin-right: 15px;
 }
 
 .rotation-sliders {
     display: flex;
-    gap: 10px;
+    flex-direction: row;
     align-items: center;
-    width: 100%;
+    gap: 15px;
+    flex: 1;
 }
 
 .rotation-slider {
     display: flex;
     align-items: center;
-    gap: 8px;
     flex: 1;
 }
 
 .rotation-slider span {
-    font-size: 0.8rem;
-    color: var(--text-secondary);
+    font-size: 0.85rem;
+    color: var(--text-primary);
     font-weight: 600;
-    width: 15px;
+    min-width: 20px;
+    margin-right: 8px;
 }
 
 .rotation-btn {
@@ -280,6 +281,7 @@ main {
     justify-content: center;
     cursor: pointer;
     transition: all 0.2s;
+    margin-left: 10px;
 }
 
 .rotation-btn:hover {
