@@ -1,4 +1,37 @@
-// DOM Elements for texture mapping
+// Tab navigation
+    const navTabs = document.querySelectorAll('.nav-tab');
+    const pages = document.querySelectorAll('.page');
+
+    // Initialize tab navigation
+    function initTabNavigation() {
+        navTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const targetPage = tab.getAttribute('data-page');
+                switchToPage(targetPage);
+            });
+        });
+    }
+
+    // Switch to a specific page
+    function switchToPage(pageName) {
+        // Update active tab
+        navTabs.forEach(tab => {
+            if (tab.getAttribute('data-page') === pageName) {
+                tab.classList.add('active');
+            } else {
+                tab.classList.remove('active');
+            }
+        });
+        
+        // Update active page
+        pages.forEach(page => {
+            if (page.id === `${pageName}-page`) {
+                page.classList.add('active-page');
+            } else {
+                page.classList.remove('active-page');
+            }
+        });
+    }    // DOM Elements for texture mapping
     const textureRepeatX = document.getElementById('texture-repeat-x');
     const textureRepeatY = document.getElementById('texture-repeat-y');
     const textureOffsetX = document.getElementById('texture-offset-x');
@@ -97,6 +130,9 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Set up event listeners
             setupEventListeners();
+            
+            // Initialize tab navigation
+            initTabNavigation();
             
         } catch (error) {
             console.error('Error initializing application:', error);
@@ -970,9 +1006,11 @@ document.addEventListener('DOMContentLoaded', function() {
         autoRotate = !autoRotate;
         if (autoRotate) {
             toggleAutoRotateBtn.classList.add('active');
+            toggleAutoRotateBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Auto On';
             showNotification('Auto-rotation enabled', 'info');
         } else {
             toggleAutoRotateBtn.classList.remove('active');
+            toggleAutoRotateBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Auto Off';
             showNotification('Auto-rotation disabled', 'info');
         }
     }
