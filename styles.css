@@ -179,28 +179,33 @@ main {
     display: block;
 }
 
-.delete-btn {
+.change-btn {
     position: absolute;
-    top: 0.5rem;
-    right: 0.5rem;
-    background-color: var(--danger-color);
+    bottom: 0.75rem;
+    right: 0.75rem;
+    background-color: var(--primary-blue);
     color: var(--text-primary);
     border: none;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
+    padding: 0.4rem 0.8rem;
+    border-radius: 4px;
     display: flex;
     align-items: center;
-    justify-content: center;
+    gap: 0.4rem;
     cursor: pointer;
     z-index: 4;
-    font-size: 0.7rem;
-    opacity: 0.8;
-    transition: opacity 0.2s;
+    font-size: 0.8rem;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s;
 }
 
-.delete-btn:hover {
-    opacity: 1;
+.change-btn:hover {
+    background-color: #388bfd;
+    transform: translateY(-2px);
+}
+
+.change-btn:active {
+    transform: translateY(0);
 }
 
 /* 3D Preview */
@@ -232,12 +237,55 @@ main {
     font-weight: 600;
     color: var(--text-primary);
     font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.controls-container h3::before, .export-options h3::before {
+    content: "";
+    display: inline-block;
+    width: 3px;
+    height: 18px;
+    background-color: var(--primary-blue);
+    border-radius: 2px;
 }
 
 .controls-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 0.75rem;
+}
+
+/* Tooltip for controls */
+.control-group {
+    position: relative;
+}
+
+.control-group label::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    background-color: var(--bg-darker);
+    color: var(--text-primary);
+    padding: 0.5rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    top: -40px;
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s, visibility 0.2s;
+    z-index: 100;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--border-color);
+    pointer-events: none;
+}
+
+.control-group:hover label::after {
+    opacity: 1;
+    visibility: visible;
 }
 
 .light-group {
@@ -405,6 +453,13 @@ input[type="range"]::-moz-range-thumb:hover {
     padding: 0.75rem;
     position: relative;
     border: 1px solid var(--border-color);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.map-preview:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border-color: var(--primary-blue);
 }
 
 .map-header {
