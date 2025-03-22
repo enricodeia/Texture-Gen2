@@ -2,13 +2,15 @@
 document.addEventListener('DOMContentLoaded', function() {
     
     // Global variables
-    let scene, camera, renderer, sphere, light;
+    let scene, camera, renderer, model, light, grid;
     let baseTexture, normalTexture, roughnessTexture, displacementTexture, aoTexture;
     let originalImageData;
     let hasUploadedImage = false;
     let autoRotate = true;
     let rotationSpeed = { x: 0.0005, y: 0.004 };
     let isDraggingSlider = false;
+    let currentModel = 'sphere';
+    let animationFrameId = null;
     
     // DOM Elements
     const uploadArea = document.getElementById('upload-area');
@@ -17,7 +19,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const previewOverlay = document.getElementById('preview-overlay');
     const uploadedImage = document.getElementById('uploaded-image');
     const deleteImageBtn = document.getElementById('delete-image');
-    const sphereContainer = document.getElementById('sphere-container');
+    const modelContainer = document.getElementById('model-container');
+    
+    // Model selection buttons
+    const modelButtons = document.querySelectorAll('.model-btn');
     
     // Navigation Tabs
     const navTabs = document.querySelectorAll('.nav-tab');
@@ -70,6 +75,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const exportDisplacement = document.getElementById('export-displacement');
     const exportAO = document.getElementById('export-ao');
     
+    // Processing indicator
+    const processingIndicator = document.getElementById('processing-indicator');
+    const progressBar = document.getElementById('progress-bar');
+    const processingMessage = document.getElementById('processing-message');
+    
+    // Notification container
+    const notificationContainer = document.getElementById('notification-container');
+    
     // Initialize the application
     init();
     
@@ -117,11 +130,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Get target page
                 const targetPage = tab.dataset.page;
                 
-                // Hide all pages
-                pages.forEach(page => page.classList.add('hidden'));
-                
-                // Show target page
-                document.getElementById(`${targetPage}-page`).classList.remove('hidden');
+                // Hide all pages and then show the target
+                pages.forEach(page => {
+                    if (page.id === `${targetPage}-page`) {
+                        page.classList.remove('hidden');
+                        setTimeout(() => {
+                            page.style.opacity = '1';
+                            page.style.transform = 'translateY(0)';
+                        }, 50);
+                    } else {
+                        page.style.opacity = '0';
+                        page.style.transform = 'translateY(10px)';
+                        setTimeout(() => {
+                            page.classList.add('hidden');
+                        }, 300);
+                    }
+                });
             });
         });
     }
@@ -133,17 +157,20 @@ document.addEventListener('DOMContentLoaded', function() {
         scene.background = new THREE.Color(0x0d1117);
     
         // Create camera
-        camera = new THREE.PerspectiveCamera(75, sphereContainer.clientWidth / sphereContainer.clientHeight, 0.1, 1000);
+        camera = new THREE.PerspectiveCamera(75, modelContainer.clientWidth / modelContainer.clientHeight, 0.1, 1000);
         camera.position.z = 3;
         camera.position.y = 0.5; // Slight angle for better viewing
     
         // Create renderer
-        renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(sphereContainer.clientWidth, sphereContainer.clientHeight);
+        renderer = new THREE.WebGLRenderer({ 
+            antialias: true,
+            alpha: true 
+        });
+        renderer.setSize(modelContainer.clientWidth, modelContainer.clientHeight);
         renderer.setPixelRatio(window.devicePixelRatio);
         
         // Append renderer to container
-        sphereContainer.appendChild(renderer.domElement);
+        modelContainer.appendChild(renderer.domElement);
     
         // Create lighting
         light = new THREE.DirectionalLight(0xffffff, 1.5);
@@ -153,25 +180,34 @@ document.addEventListener('DOMContentLoaded', function() {
         // Add ambient light
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
         scene.add(ambientLight);
+        
+        // Add subtle hemisphere light for better detail visibility
+        const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.3);
+        hemiLight.position.set(0, 20, 0);
+        scene.add(hemiLight);
+        
+        // Add grid for better orientation
+        grid = new THREE.GridHelper(10, 20, 0x444444, 0x252525);
+        grid.position.y = -1.5;
+        scene.add(grid);
     
-        // Create a default sphere
-        createSphere();
+        // Create initial model (sphere by default)
+        createModel();
         
         // Add loading indicator until fully loaded
-        const loadingElement = document.createElement('div');
-        loadingElement.className = 'loading-indicator';
-        loadingElement.innerHTML = '<div class="spinner"></div><p>Initializing 3D environment...</p>';
-        sphereContainer.appendChild(loadingElement);
+        showLoadingIndicator('Initializing 3D environment...', 0);
         
-        // Remove loading indicator after a short delay
-        setTimeout(() => {
-            loadingElement.classList.add('fade-out');
-            setTimeout(() => {
-                if (loadingElement.parentNode) {
-                    loadingElement.parentNode.removeChild(loadingElement);
-                }
-            }, 500);
-        }, 1500);
+        // Simulate progress
+        let progress = 0;
+        const progressInterval = setInterval(() => {
+            progress += 10;
+            if (progress <= 100) {
+                updateProgress(progress);
+            } else {
+                clearInterval(progressInterval);
+                hideLoadingIndicator();
+            }
+        }, 100);
     
         // Handle window resize
         window.addEventListener('resize', onWindowResize);
@@ -180,15 +216,29 @@ document.addEventListener('DOMContentLoaded', function() {
         animate();
     }
     
-    // Create or update the sphere with textures
-    function createSphere() {
-        // Remove existing sphere if it exists
-        if (sphere) {
-            scene.remove(sphere);
+    // Create or update the 3D model with textures
+    function createModel() {
+        // Remove existing model if it exists
+        if (model) {
+            scene.remove(model);
         }
-    
-        // Create geometry with higher segment count for better displacement
-        const geometry = new THREE.SphereGeometry(1, 64, 64);
+        
+        let geometry;
+        
+        // Create geometry based on selected model type
+        switch (currentModel) {
+            case 'sphere':
+                geometry = new THREE.SphereGeometry(1, 64, 64);
+                break;
+            case 'cube':
+                geometry = new THREE.BoxGeometry(1.5, 1.5, 1.5, 10, 10, 10);
+                break;
+            case 'plane':
+                geometry = new THREE.PlaneGeometry(2, 2, 32, 32);
+                break;
+            default:
+                geometry = new THREE.SphereGeometry(1, 64, 64);
+        }
         
         // Create material
         const material = new THREE.MeshStandardMaterial({
@@ -197,7 +247,7 @@ document.addEventListener('DOMContentLoaded', function() {
             metalness: parseFloat(metalness.value)
         });
     
-        // First make sure all textures are updated
+        // Make sure all textures are updated
         if (baseTexture) baseTexture.needsUpdate = true;
         if (normalTexture) normalTexture.needsUpdate = true;
         if (roughnessTexture) roughnessTexture.needsUpdate = true;
@@ -227,14 +277,14 @@ document.addEventListener('DOMContentLoaded', function() {
         material.needsUpdate = true;
     
         // Create mesh
-        sphere = new THREE.Mesh(geometry, material);
+        model = new THREE.Mesh(geometry, material);
         
         // Set up UV2 coordinates for AO map
         geometry.setAttribute('uv2', geometry.attributes.uv);
         
-        scene.add(sphere);
+        scene.add(model);
         
-        console.log("Sphere created with textures:", {
+        console.log(`Created ${currentModel} model with textures:`, {
             base: !!material.map,
             normal: !!material.normalMap,
             roughness: !!material.roughnessMap,
@@ -245,18 +295,18 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Animation loop
     function animate() {
-        requestAnimationFrame(animate);
+        animationFrameId = requestAnimationFrame(animate);
         
-        // Add automatic or manual rotation to the sphere
-        if (sphere) {
+        // Add automatic or manual rotation to the model
+        if (model) {
             if (autoRotate) {
-                sphere.rotation.y += rotationSpeed.y;
-                sphere.rotation.x += rotationSpeed.x;
+                model.rotation.y += rotationSpeed.y;
+                model.rotation.x += rotationSpeed.x;
                 
                 // Update sliders to match current rotation
                 if (!isDraggingSlider) {
-                    rotationX.value = ((sphere.rotation.x % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2) - Math.PI;
-                    rotationY.value = ((sphere.rotation.y % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2) - Math.PI;
+                    rotationX.value = ((model.rotation.x % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2) - Math.PI;
+                    rotationY.value = ((model.rotation.y % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2) - Math.PI;
                 }
             }
         }
@@ -268,10 +318,10 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Handle window resize
     function onWindowResize() {
-        if (camera && renderer && sphereContainer) {
-            camera.aspect = sphereContainer.clientWidth / sphereContainer.clientHeight;
+        if (camera && renderer && modelContainer) {
+            camera.aspect = modelContainer.clientWidth / modelContainer.clientHeight;
             camera.updateProjectionMatrix();
-            renderer.setSize(sphereContainer.clientWidth, sphereContainer.clientHeight);
+            renderer.setSize(modelContainer.clientWidth, modelContainer.clientHeight);
         }
     }
     
@@ -324,6 +374,26 @@ document.addEventListener('DOMContentLoaded', function() {
             clearImage();
         });
         
+        // Model selection buttons
+        modelButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Remove active class from all buttons
+                modelButtons.forEach(b => b.classList.remove('active'));
+                
+                // Add active class to clicked button
+                btn.classList.add('active');
+                
+                // Update current model
+                currentModel = btn.dataset.model;
+                
+                // Create new model
+                createModel();
+                
+                // Show feedback notification
+                showNotification(`Switched to ${currentModel} view`, 'info');
+            });
+        });
+        
         // Sliders
         baseStrength.addEventListener('input', updateTextures);
         normalStrength.addEventListener('input', updateTextures);
@@ -356,6 +426,31 @@ document.addEventListener('DOMContentLoaded', function() {
         rotationX.addEventListener('input', updateRotation);
         rotationY.addEventListener('input', updateRotation);
         toggleAutoRotateBtn.addEventListener('click', toggleAutoRotation);
+        
+        // When sliders are used, set dragging flag
+        const sliders = document.querySelectorAll('input[type="range"]');
+        sliders.forEach(slider => {
+            slider.addEventListener('mousedown', () => {
+                isDraggingSlider = true;
+                
+                // Add mouseup listener to document to detect when slider drag ends
+                document.addEventListener('mouseup', function onMouseUp() {
+                    isDraggingSlider = false;
+                    document.removeEventListener('mouseup', onMouseUp);
+                }, { once: true });
+            });
+            
+            // Touch support for mobile
+            slider.addEventListener('touchstart', () => {
+                isDraggingSlider = true;
+                
+                // Add touchend listener to document to detect when slider touch ends
+                document.addEventListener('touchend', function onTouchEnd() {
+                    isDraggingSlider = false;
+                    document.removeEventListener('touchend', onTouchEnd);
+                }, { once: true });
+            });
+        });
     }
     
     // Clear the uploaded image
@@ -365,14 +460,14 @@ document.addEventListener('DOMContentLoaded', function() {
         uploadedImage.src = '';
         hasUploadedImage = false;
         
-        // Remove textures from sphere
-        if (sphere && sphere.material) {
-            sphere.material.map = null;
-            sphere.material.normalMap = null;
-            sphere.material.roughnessMap = null;
-            sphere.material.displacementMap = null;
-            sphere.material.aoMap = null;
-            sphere.material.needsUpdate = true;
+        // Remove textures from model
+        if (model && model.material) {
+            model.material.map = null;
+            model.material.normalMap = null;
+            model.material.roughnessMap = null;
+            model.material.displacementMap = null;
+            model.material.aoMap = null;
+            model.material.needsUpdate = true;
         }
         
         // Clear canvases
@@ -416,16 +511,15 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         // Show loading state
-        uploadArea.classList.add('processing');
-        const loadingEl = document.createElement('div');
-        loadingEl.className = 'processing-indicator';
-        loadingEl.innerHTML = '<div class="spinner"></div><p>Processing texture...</p>';
-        document.body.appendChild(loadingEl);
+        showLoadingIndicator('Reading image file...', 10);
         
         const reader = new FileReader();
         
         reader.onload = function(e) {
             try {
+                updateProgress(30);
+                updateLoadingMessage('Processing image...');
+                
                 // Display the image
                 uploadedImage.src = e.target.result;
                 previewOverlay.style.display = 'flex';
@@ -435,76 +529,141 @@ document.addEventListener('DOMContentLoaded', function() {
                 const img = new Image();
                 img.onload = function() {
                     try {
+                        updateProgress(50);
+                        updateLoadingMessage('Analyzing texture...');
+                        
                         // Store original image data
                         originalImageData = getImageData(img);
+                        
+                        updateProgress(60);
+                        updateLoadingMessage('Generating texture maps...');
                         
                         // Generate texture maps
                         generateTextureMaps(img);
                         
-                        // Recreate the sphere to apply textures
-                        createSphere();
+                        updateProgress(90);
+                        updateLoadingMessage('Applying to 3D model...');
+                        
+                        // Recreate the model to apply textures
+                        createModel();
                         
                         // Remove loading state
                         setTimeout(() => {
-                            uploadArea.classList.remove('processing');
-                            if (loadingEl.parentNode) {
-                                loadingEl.parentNode.removeChild(loadingEl);
-                            }
+                            updateProgress(100);
+                            hideLoadingIndicator();
                             showNotification('Texture maps generated successfully!', 'success');
                         }, 500);
                     } catch (error) {
                         console.error('Error processing image:', error);
-                        handleProcessingError(loadingEl);
+                        handleProcessingError();
                     }
                 };
                 img.src = e.target.result;
             } catch (error) {
                 console.error('Error loading image:', error);
-                handleProcessingError(loadingEl);
+                handleProcessingError();
             }
         };
         
         reader.onerror = function() {
-            handleProcessingError(loadingEl);
+            handleProcessingError();
         };
         
         reader.readAsDataURL(file);
     }
     
     // Handle processing error
-    function handleProcessingError(loadingEl) {
-        uploadArea.classList.remove('processing');
-        if (loadingEl && loadingEl.parentNode) {
-            loadingEl.parentNode.removeChild(loadingEl);
-        }
+    function handleProcessingError() {
+        hideLoadingIndicator();
         showNotification('Error processing image. Please try another image.', 'error');
+    }
+    
+    // Show loading indicator with specified message and progress
+    function showLoadingIndicator(message, progress = 0) {
+        processingMessage.textContent = message;
+        progressBar.style.width = `${progress}%`;
+        processingIndicator.style.display = 'flex';
+    }
+    
+    // Update loading progress
+    function updateProgress(progress) {
+        progressBar.style.width = `${progress}%`;
+    }
+    
+    // Update loading message
+    function updateLoadingMessage(message) {
+        processingMessage.textContent = message;
+    }
+    
+    // Hide loading indicator
+    function hideLoadingIndicator() {
+        processingIndicator.style.display = 'none';
     }
     
     // Show notification
     function showNotification(message, type = 'info') {
+        // Define titles based on notification type
+        const titles = {
+            success: 'Success',
+            error: 'Error',
+            info: 'Information',
+            warning: 'Warning'
+        };
+        
+        // Define icons based on notification type
+        const icons = {
+            success: 'fa-check-circle',
+            error: 'fa-exclamation-circle',
+            info: 'fa-info-circle',
+            warning: 'fa-exclamation-triangle'
+        };
+        
+        // Create notification element
         const notification = document.createElement('div');
         notification.className = `notification ${type}`;
         notification.innerHTML = `
-            <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i>
-            <p>${message}</p>
+            <div class="notification-icon">
+                <i class="fas ${icons[type]}"></i>
+            </div>
+            <div class="notification-content">
+                <h4 class="notification-title">${titles[type]}</h4>
+                <p class="notification-message">${message}</p>
+            </div>
+            <button class="notification-close">
+                <i class="fas fa-times"></i>
+            </button>
         `;
         
-        document.body.appendChild(notification);
+        // Add to notification container
+        notificationContainer.appendChild(notification);
         
-        // Animate in
-        setTimeout(() => {
-            notification.classList.add('show');
-        }, 10);
-        
-        // Animate out after delay
-        setTimeout(() => {
+        // Add close button functionality
+        const closeBtn = notification.querySelector('.notification-close');
+        closeBtn.addEventListener('click', () => {
             notification.classList.remove('show');
             setTimeout(() => {
                 if (notification.parentNode) {
                     notification.parentNode.removeChild(notification);
                 }
             }, 300);
-        }, 3000);
+        });
+        
+        // Animate in
+        setTimeout(() => {
+            notification.classList.add('show');
+        }, 10);
+        
+        // Auto-remove after delay
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            }
+        }, 5000);
     }
     
     // Get image data from an image element
@@ -831,26 +990,26 @@ document.addEventListener('DOMContentLoaded', function() {
         displacementValue.textContent = parseFloat(displacementStrength.value).toFixed(1);
         aoValue.textContent = parseFloat(aoStrength.value).toFixed(1);
         
-        // Check if we need to update the sphere material
-        if (sphere && sphere.material) {
+        // Check if we need to update the model material
+        if (model && model.material) {
             // Update normal map intensity
-            if (sphere.material.normalMap) {
-                sphere.material.normalScale.set(
+            if (model.material.normalMap) {
+                model.material.normalScale.set(
                     parseFloat(normalStrength.value),
                     parseFloat(normalStrength.value)
                 );
             }
             
             // Update displacement map intensity
-            if (sphere.material.displacementMap) {
-                sphere.material.displacementScale = parseFloat(displacementStrength.value);
+            if (model.material.displacementMap) {
+                model.material.displacementScale = parseFloat(displacementStrength.value);
             }
             
             // Make sure material updates
-            sphere.material.needsUpdate = true;
+            model.material.needsUpdate = true;
         } else {
-            // If sphere doesn't exist, create it
-            createSphere();
+            // If model doesn't exist, create it
+            createModel();
         }
     }
     
@@ -859,9 +1018,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // Update display values
         metalnessValue.textContent = parseFloat(metalness.value).toFixed(1);
         
-        if (sphere && sphere.material) {
-            sphere.material.metalness = parseFloat(metalness.value);
-            sphere.material.needsUpdate = true;
+        if (model && model.material) {
+            model.material.metalness = parseFloat(metalness.value);
+            model.material.needsUpdate = true;
         }
     }
     
@@ -908,59 +1067,60 @@ document.addEventListener('DOMContentLoaded', function() {
         let exportCount = 0;
         
         // Show processing indicator
-        const loadingEl = document.createElement('div');
-        loadingEl.className = 'processing-indicator';
-        loadingEl.innerHTML = '<div class="spinner"></div><p>Packaging texture maps...</p>';
-        document.body.appendChild(loadingEl);
+        showLoadingIndicator('Packaging texture maps...', 10);
         
         // Add selected maps to ZIP
         if (exportBase.checked && baseCanvas) {
             zip.file(`${textureBaseName}_basecolor.png`, dataURLToBlob(baseCanvas.toDataURL('image/png')), {base64: false});
             exportCount++;
+            updateProgress(20);
         }
         
         if (exportNormal.checked && normalCanvas) {
             zip.file(`${textureBaseName}_normal.png`, dataURLToBlob(normalCanvas.toDataURL('image/png')), {base64: false});
             exportCount++;
+            updateProgress(40);
         }
         
         if (exportRoughness.checked && roughnessCanvas) {
             zip.file(`${textureBaseName}_roughness.png`, dataURLToBlob(roughnessCanvas.toDataURL('image/png')), {base64: false});
             exportCount++;
+            updateProgress(60);
         }
         
         if (exportDisplacement.checked && displacementCanvas) {
             zip.file(`${textureBaseName}_displacement.png`, dataURLToBlob(displacementCanvas.toDataURL('image/png')), {base64: false});
             exportCount++;
+            updateProgress(80);
         }
         
         if (exportAO.checked && aoCanvas) {
             zip.file(`${textureBaseName}_ao.png`, dataURLToBlob(aoCanvas.toDataURL('image/png')), {base64: false});
             exportCount++;
+            updateProgress(90);
         }
         
         if (exportCount === 0) {
-            if (loadingEl.parentNode) {
-                loadingEl.parentNode.removeChild(loadingEl);
-            }
-            showNotification('Please select at least one map to export', 'error');
+            hideLoadingIndicator();
+            showNotification('Please select at least one map to export', 'warning');
             return;
         }
+        
+        updateLoadingMessage('Creating ZIP file...');
         
         // Generate and download the ZIP file
         zip.generateAsync({type: 'blob'})
             .then(function(content) {
+                updateProgress(100);
                 saveAs(content, `${textureBaseName}_maps.zip`);
-                if (loadingEl.parentNode) {
-                    loadingEl.parentNode.removeChild(loadingEl);
-                }
-                showNotification(`${exportCount} texture maps exported successfully!`, 'success');
+                setTimeout(() => {
+                    hideLoadingIndicator();
+                    showNotification(`${exportCount} texture maps exported successfully!`, 'success');
+                }, 500);
             })
             .catch(function(error) {
                 console.error('Error creating ZIP file:', error);
-                if (loadingEl.parentNode) {
-                    loadingEl.parentNode.removeChild(loadingEl);
-                }
+                hideLoadingIndicator();
                 showNotification('Error creating ZIP file. Please try again.', 'error');
             });
     }
@@ -994,24 +1154,18 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Update rotation from sliders
     function updateRotation() {
-        if (!sphere) return;
+        if (!model) return;
         
         // Disable auto-rotate when user drags sliders
         if (!isDraggingSlider) {
             isDraggingSlider = true;
             autoRotate = false;
             toggleAutoRotateBtn.classList.remove('active');
-            
-            // Add mouseup listener to document to detect when slider drag ends
-            document.addEventListener('mouseup', function onMouseUp() {
-                isDraggingSlider = false;
-                document.removeEventListener('mouseup', onMouseUp);
-            }, { once: true });
         }
         
         // Apply rotation from sliders
-        sphere.rotation.x = parseFloat(rotationX.value);
-        sphere.rotation.y = parseFloat(rotationY.value);
+        model.rotation.x = parseFloat(rotationX.value);
+        model.rotation.y = parseFloat(rotationY.value);
     }
     
     // Export Three.js code
@@ -1021,7 +1175,10 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        // Create sample Three.js code
+        // Show loading indicator
+        showLoadingIndicator('Generating Three.js code...', 50);
+        
+        // Create sample Three.js code with current settings
         const code = `// Three.js Material Example with Exported Textures
 import * as THREE from 'three';
 
@@ -1030,8 +1187,12 @@ const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.position.z = 5;
 
-const renderer = new THREE.WebGLRenderer({ antialias: true });
+const renderer = new THREE.WebGLRenderer({ 
+    antialias: true,
+    alpha: true
+});
 renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(window.devicePixelRatio);
 document.body.appendChild(renderer.domElement);
 
 // Load textures
@@ -1042,7 +1203,7 @@ const roughnessTexture = textureLoader.load('texture_roughness.png');
 const displacementTexture = textureLoader.load('texture_displacement.png');
 const aoTexture = textureLoader.load('texture_ao.png');
 
-// Create material
+// Create material with all maps
 const material = new THREE.MeshStandardMaterial({
     map: baseTexture,
     normalMap: normalTexture,
@@ -1055,8 +1216,13 @@ const material = new THREE.MeshStandardMaterial({
     displacementScale: ${displacementStrength.value}
 });
 
-// Create a mesh (e.g., sphere, cube, or your desired geometry)
-const geometry = new THREE.SphereGeometry(2, 64, 64); // High resolution for displacement
+// Create a mesh with your preferred geometry
+${currentModel === 'sphere' ? 
+    `const geometry = new THREE.SphereGeometry(2, 64, 64); // High resolution for displacement` :
+    currentModel === 'cube' ? 
+    `const geometry = new THREE.BoxGeometry(3, 3, 3, 10, 10, 10); // Subdivided for better displacement` :
+    `const geometry = new THREE.PlaneGeometry(4, 4, 32, 32); // Subdivided for displacement`
+}
 const mesh = new THREE.Mesh(geometry, material);
 
 // For ambient occlusion to work, we need UV2
@@ -1065,17 +1231,25 @@ geometry.setAttribute('uv2', geometry.attributes.uv);
 scene.add(mesh);
 
 // Add lights
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
 scene.add(ambientLight);
 
-const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-directionalLight.position.set(5, 5, 5);
+const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
+directionalLight.position.set(${lightX.value}, ${lightY.value}, ${lightZ.value});
 scene.add(directionalLight);
+
+// Add subtle hemisphere light for better detail visibility
+const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.3);
+hemiLight.position.set(0, 20, 0);
+scene.add(hemiLight);
 
 // Animation loop
 function animate() {
     requestAnimationFrame(animate);
+    
+    // Rotation animation
     mesh.rotation.y += 0.005;
+    
     renderer.render(scene, camera);
 }
 
@@ -1088,14 +1262,20 @@ window.addEventListener('resize', () => {
     renderer.setSize(window.innerWidth, window.innerHeight);
 });`;
         
-        // Create a download link for the code
-        const blob = new Blob([code], { type: 'text/javascript' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = 'texture_material.js';
-        link.click();
-        
-        showNotification('Three.js code exported', 'success');
+        // Simulate processing delay
+        setTimeout(() => {
+            // Create a download link for the code
+            updateProgress(100);
+            
+            const blob = new Blob([code], { type: 'text/javascript' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'texture_material.js';
+            link.click();
+            
+            hideLoadingIndicator();
+            showNotification('Three.js code exported successfully', 'success');
+        }, 800);
     }
 });
