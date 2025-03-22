@@ -224,40 +224,23 @@ main {
 }
 
 .rotation-controls {
-    padding: 8px 12px;
+    padding: 10px 15px;
     background-color: rgba(1, 4, 9, 0.8);
     border-top: 1px solid var(--border-color);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
     width: 100%;
-}
-
-.rotation-group {
-    display: flex;
-    align-items: center;
-    width: 100%;
-}
-
-.rotation-group label {
-    font-size: 0.85rem;
-    color: var(--text-primary);
-    font-weight: 600;
-    white-space: nowrap;
-    margin-right: 15px;
 }
 
 .rotation-sliders {
     display: flex;
-    flex-direction: row;
     align-items: center;
     gap: 15px;
-    flex: 1;
+    flex-wrap: nowrap;
 }
 
 .rotation-slider {
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    gap: 5px;
     flex: 1;
 }
 
@@ -265,40 +248,106 @@ main {
     font-size: 0.85rem;
     color: var(--text-primary);
     font-weight: 600;
-    min-width: 20px;
-    margin-right: 8px;
 }
 
-.rotation-btn {
+.control-btn {
     background-color: var(--primary-blue);
-    color: var(--text-primary);
+    color: white;
     border: none;
-    width: 32px;
-    height: 32px;
+    padding: 6px 12px;
     border-radius: 4px;
     display: flex;
     align-items: center;
-    justify-content: center;
+    gap: 5px;
     cursor: pointer;
     transition: all 0.2s;
-    margin-left: 10px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    height: 32px;
 }
 
-.rotation-btn:hover {
+.control-btn:hover {
     background-color: #388bfd;
     transform: translateY(-2px);
 }
 
-.rotation-btn:active {
+.control-btn:active {
     transform: translateY(0);
 }
 
-.rotation-btn.active {
+.control-btn.active {
     background-color: var(--primary-green);
 }
 
-.rotation-btn i {
+.control-btn i {
     font-size: 0.9rem;
+}
+
+/* Page System */
+.page {
+    display: none;
+}
+
+.active-page {
+    display: block;
+}
+
+/* Content sections for help and about pages */
+.content-section {
+    background-color: var(--bg-light);
+    border-radius: 8px;
+    padding: 2rem;
+    border: 1px solid var(--border-color);
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.content-section h2 {
+    font-size: 1.8rem;
+    color: var(--text-primary);
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.help-section, .about-section {
+    margin-bottom: 2rem;
+}
+
+.help-section:last-child, .about-section:last-child {
+    margin-bottom: 0;
+}
+
+.help-section h3, .about-section h3 {
+    font-size: 1.2rem;
+    color: var(--primary-blue);
+    margin-bottom: 0.75rem;
+}
+
+.help-section p, .about-section p {
+    color: var(--text-primary);
+    margin-bottom: 0.75rem;
+    line-height: 1.6;
+}
+
+.help-section ul, .about-section ul {
+    padding-left: 1.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.help-section li, .about-section li {
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    line-height: 1.5;
+}
+
+.help-section a, .about-section a {
+    color: var(--primary-blue);
+    text-decoration: none;
+}
+
+.help-section a:hover, .about-section a:hover {
+    text-decoration: underline;
 }
 
 /* Controls */
@@ -512,21 +561,29 @@ input[type="range"]::-moz-range-thumb:hover {
 
 .download-btn {
     background-color: var(--primary-blue);
-    color: var(--text-primary);
+    color: white;
     border: none;
-    width: 24px;
-    height: 24px;
+    width: 32px;
+    height: 32px;
     border-radius: 4px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    font-size: 0.8rem;
-    transition: background-color 0.2s;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .download-btn:hover {
     background-color: #388bfd;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.download-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 /* Footer */
