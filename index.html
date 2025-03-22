@@ -18,6 +18,9 @@
                 <button id="export-zip" class="primary-btn">
                     <i class="fas fa-file-archive"></i> Export All Maps as ZIP
                 </button>
+                <button id="export-threejs" class="secondary-btn">
+                    <i class="fas fa-code"></i> Export Three.js Code
+                </button>
             </div>
         </nav>
 
@@ -34,15 +37,25 @@
                         </div>
                         <div class="preview-overlay" id="preview-overlay">
                             <img id="uploaded-image" src="" alt="Uploaded texture">
-                            <button class="delete-btn" id="delete-image">
-                                <i class="fas fa-times"></i>
-                            </button>
+                            <button class="delete-btn" id="delete-image">Delete Texture</button>
                         </div>
                     </div>
                 </div>
                 
                 <div class="preview-3d">
                     <div id="sphere-container"></div>
+                    <div class="rotation-controls">
+                        <div class="rotation-group">
+                            <label>Manual Rotation:</label>
+                            <div class="rotation-buttons">
+                                <button id="rotate-left" class="rotation-btn" title="Rotate Left"><i class="fas fa-arrow-left"></i></button>
+                                <button id="rotate-right" class="rotation-btn" title="Rotate Right"><i class="fas fa-arrow-right"></i></button>
+                                <button id="rotate-up" class="rotation-btn" title="Rotate Up"><i class="fas fa-arrow-up"></i></button>
+                                <button id="rotate-down" class="rotation-btn" title="Rotate Down"><i class="fas fa-arrow-down"></i></button>
+                                <button id="toggle-auto-rotate" class="rotation-btn" title="Toggle Auto-Rotation"><i class="fas fa-sync-alt"></i></button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
