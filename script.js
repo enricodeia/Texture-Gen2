@@ -6,6 +6,8 @@ document.addEventListener('DOMContentLoaded', function() {
     let baseTexture, normalTexture, roughnessTexture, displacementTexture, aoTexture;
     let originalImageData;
     let hasUploadedImage = false;
+    let autoRotate = true;
+    let rotationSpeed = { x: 0.0005, y: 0.004 };
     
     // DOM Elements
     const uploadArea = document.getElementById('upload-area');
@@ -15,6 +17,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const uploadedImage = document.getElementById('uploaded-image');
     const deleteImageBtn = document.getElementById('delete-image');
     const sphereContainer = document.getElementById('sphere-container');
+    
+    // Rotation controls
+    const rotateLeftBtn = document.getElementById('rotate-left');
+    const rotateRightBtn = document.getElementById('rotate-right');
+    const rotateUpBtn = document.getElementById('rotate-up');
+    const rotateDownBtn = document.getElementById('rotate-down');
+    const toggleAutoRotateBtn = document.getElementById('toggle-auto-rotate');
     
     // Canvas Elements
     const baseCanvas = document.getElementById('base-map');
@@ -209,10 +218,12 @@ document.addEventListener('DOMContentLoaded', function() {
     function animate() {
         requestAnimationFrame(animate);
         
-        // Add automatic rotation to the sphere
+        // Add automatic or manual rotation to the sphere
         if (sphere) {
-            sphere.rotation.y += 0.004;
-            sphere.rotation.x += 0.0005;
+            if (autoRotate) {
+                sphere.rotation.y += rotationSpeed.y;
+                sphere.rotation.x += rotationSpeed.x;
+            }
         }
         
         if (renderer) {
@@ -300,6 +311,35 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Export ZIP
         exportZip.addEventListener('click', exportAllMapsAsZip);
+        
+        // Export Three.js code
+        const exportThreejsBtn = document.getElementById('export-threejs');
+        if (exportThreejsBtn) {
+            exportThreejsBtn.addEventListener('click', exportThreejsCode);
+        }
+        
+        // Rotation controls
+        rotateLeftBtn.addEventListener('mousedown', () => { 
+            autoRotate = false;
+            rotateManually('left');
+        });
+        
+        rotateRightBtn.addEventListener('mousedown', () => { 
+            autoRotate = false; 
+            rotateManually('right');
+        });
+        
+        rotateUpBtn.addEventListener('mousedown', () => { 
+            autoRotate = false; 
+            rotateManually('up');
+        });
+        
+        rotateDownBtn.addEventListener('mousedown', () => { 
+            autoRotate = false; 
+            rotateManually('down');
+        });
+        
+        toggleAutoRotateBtn.addEventListener('click', toggleAutoRotation);
     }
     
     // Clear the uploaded image
@@ -922,5 +962,124 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         return new Blob([uInt8Array], {type: contentType});
+    }
+    
+    // Toggle auto-rotation
+    function toggleAutoRotation() {
+        autoRotate = !autoRotate;
+        if (autoRotate) {
+            toggleAutoRotateBtn.classList.add('active');
+            showNotification('Auto-rotation enabled', 'info');
+        } else {
+            toggleAutoRotateBtn.classList.remove('active');
+            showNotification('Auto-rotation disabled', 'info');
+        }
+    }
+    
+    // Manual rotation
+    function rotateManually(direction) {
+        if (!sphere) return;
+        
+        const rotationAmount = 0.2; // Amount to rotate on button press
+        
+        switch(direction) {
+            case 'left':
+                sphere.rotation.y -= rotationAmount;
+                break;
+            case 'right':
+                sphere.rotation.y += rotationAmount;
+                break;
+            case 'up':
+                sphere.rotation.x -= rotationAmount;
+                break;
+            case 'down':
+                sphere.rotation.x += rotationAmount;
+                break;
+        }
+    }
+    
+    // Export Three.js code
+    function exportThreejsCode() {
+        if (!hasUploadedImage) {
+            showNotification('Please upload a texture first', 'error');
+            return;
+        }
+        
+        // Create sample Three.js code
+        const code = `// Three.js Material Example with Exported Textures
+import * as THREE from 'three';
+
+// Create a scene, camera, and renderer
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera.position.z = 5;
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
+
+// Load textures
+const textureLoader = new THREE.TextureLoader();
+const baseTexture = textureLoader.load('texture_basecolor.png');
+const normalTexture = textureLoader.load('texture_normal.png');
+const roughnessTexture = textureLoader.load('texture_roughness.png');
+const displacementTexture = textureLoader.load('texture_displacement.png');
+const aoTexture = textureLoader.load('texture_ao.png');
+
+// Create material
+const material = new THREE.MeshStandardMaterial({
+    map: baseTexture,
+    normalMap: normalTexture,
+    roughnessMap: roughnessTexture,
+    displacementMap: displacementTexture,
+    aoMap: aoTexture,
+    normalScale: new THREE.Vector2(${normalStrength.value}, ${normalStrength.value}),
+    roughness: ${roughnessStrength.value},
+    metalness: ${metalness.value},
+    displacementScale: ${displacementStrength.value}
+});
+
+// Create a mesh (e.g., sphere, cube, or your desired geometry)
+const geometry = new THREE.SphereGeometry(2, 64, 64); // High resolution for displacement
+const mesh = new THREE.Mesh(geometry, material);
+
+// For ambient occlusion to work, we need UV2
+geometry.setAttribute('uv2', geometry.attributes.uv);
+
+scene.add(mesh);
+
+// Add lights
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+scene.add(ambientLight);
+
+const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+directionalLight.position.set(5, 5, 5);
+scene.add(directionalLight);
+
+// Animation loop
+function animate() {
+    requestAnimationFrame(animate);
+    mesh.rotation.y += 0.005;
+    renderer.render(scene, camera);
+}
+
+animate();
+
+// Handle window resize
+window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});`;
+        
+        // Create a download link for the code
+        const blob = new Blob([code], { type: 'text/javascript' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'texture_material.js';
+        link.click();
+        
+        showNotification('Three.js code exported', 'success');
     }
 });
