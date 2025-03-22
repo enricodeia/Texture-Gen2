@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let hasUploadedImage = false;
     let autoRotate = true;
     let rotationSpeed = { x: 0.0005, y: 0.004 };
+    let isDraggingSlider = false;
     
     // DOM Elements
     const uploadArea = document.getElementById('upload-area');
@@ -19,10 +20,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const sphereContainer = document.getElementById('sphere-container');
     
     // Rotation controls
-    const rotateLeftBtn = document.getElementById('rotate-left');
-    const rotateRightBtn = document.getElementById('rotate-right');
-    const rotateUpBtn = document.getElementById('rotate-up');
-    const rotateDownBtn = document.getElementById('rotate-down');
+    const rotationX = document.getElementById('rotation-x');
+    const rotationY = document.getElementById('rotation-y');
     const toggleAutoRotateBtn = document.getElementById('toggle-auto-rotate');
     
     // Canvas Elements
@@ -223,6 +222,12 @@ document.addEventListener('DOMContentLoaded', function() {
             if (autoRotate) {
                 sphere.rotation.y += rotationSpeed.y;
                 sphere.rotation.x += rotationSpeed.x;
+                
+                // Update sliders to match current rotation
+                if (!isDraggingSlider) {
+                    rotationX.value = ((sphere.rotation.x % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2) - Math.PI;
+                    rotationY.value = ((sphere.rotation.y % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2) - Math.PI;
+                }
             }
         }
         
@@ -319,26 +324,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         // Rotation controls
-        rotateLeftBtn.addEventListener('mousedown', () => { 
-            autoRotate = false;
-            rotateManually('left');
-        });
-        
-        rotateRightBtn.addEventListener('mousedown', () => { 
-            autoRotate = false; 
-            rotateManually('right');
-        });
-        
-        rotateUpBtn.addEventListener('mousedown', () => { 
-            autoRotate = false; 
-            rotateManually('up');
-        });
-        
-        rotateDownBtn.addEventListener('mousedown', () => { 
-            autoRotate = false; 
-            rotateManually('down');
-        });
-        
+        rotationX.addEventListener('input', updateRotation);
+        rotationY.addEventListener('input', updateRotation);
         toggleAutoRotateBtn.addEventListener('click', toggleAutoRotation);
     }
     
@@ -976,26 +963,26 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Manual rotation
-    function rotateManually(direction) {
+    // Update rotation from sliders
+    function updateRotation() {
         if (!sphere) return;
         
-        const rotationAmount = 0.2; // Amount to rotate on button press
-        
-        switch(direction) {
-            case 'left':
-                sphere.rotation.y -= rotationAmount;
-                break;
-            case 'right':
-                sphere.rotation.y += rotationAmount;
-                break;
-            case 'up':
-                sphere.rotation.x -= rotationAmount;
-                break;
-            case 'down':
-                sphere.rotation.x += rotationAmount;
-                break;
+        // Disable auto-rotate when user drags sliders
+        if (!isDraggingSlider) {
+            isDraggingSlider = true;
+            autoRotate = false;
+            toggleAutoRotateBtn.classList.remove('active');
+            
+            // Add mouseup listener to document to detect when slider drag ends
+            document.addEventListener('mouseup', function onMouseUp() {
+                isDraggingSlider = false;
+                document.removeEventListener('mouseup', onMouseUp);
+            }, { once: true });
         }
+        
+        // Apply rotation from sliders
+        sphere.rotation.x = parseFloat(rotationX.value);
+        sphere.rotation.y = parseFloat(rotationY.value);
     }
     
     // Export Three.js code
