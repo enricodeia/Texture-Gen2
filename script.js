@@ -6,7 +6,6 @@ document.addEventListener('DOMContentLoaded', function() {
     let baseTexture, normalTexture, roughnessTexture, displacementTexture, aoTexture;
     let originalImageData;
     let hasUploadedImage = false;
-    let currentFile = null; // Store the current file reference
     
     // DOM Elements
     const uploadArea = document.getElementById('upload-area');
@@ -14,7 +13,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const textureUpload = document.getElementById('texture-upload');
     const previewOverlay = document.getElementById('preview-overlay');
     const uploadedImage = document.getElementById('uploaded-image');
-    const changeImageBtn = document.getElementById('change-image');
+    const deleteImageBtn = document.getElementById('delete-image');
     const sphereContainer = document.getElementById('sphere-container');
     
     // Canvas Elements
@@ -31,7 +30,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const displacementStrength = document.getElementById('displacement-strength');
     const aoStrength = document.getElementById('ao-strength');
     const metalness = document.getElementById('metalness');
-    const textureScale = document.getElementById('texture-scale');
     const lightX = document.getElementById('light-x');
     const lightY = document.getElementById('light-y');
     const lightZ = document.getElementById('light-z');
@@ -43,7 +41,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const displacementValue = document.getElementById('displacement-value');
     const aoValue = document.getElementById('ao-value');
     const metalnessValue = document.getElementById('metalness-value');
-    const scaleValue = document.getElementById('scale-value');
     
     // Download buttons
     const downloadBase = document.getElementById('download-base');
@@ -159,8 +156,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const material = new THREE.MeshStandardMaterial({
             color: 0xffffff,
             roughness: parseFloat(roughnessStrength.value),
-            metalness: parseFloat(metalness.value),
-            transparent: true
+            metalness: parseFloat(metalness.value)
         });
     
         // First make sure all textures are updated
@@ -169,7 +165,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (roughnessTexture) roughnessTexture.needsUpdate = true;
         if (displacementTexture) displacementTexture.needsUpdate = true;
         if (aoTexture) aoTexture.needsUpdate = true;
-        if (opacityTexture) opacityTexture.needsUpdate = true;
     
         // Apply textures
         material.map = baseTexture;
@@ -177,17 +172,6 @@ document.addEventListener('DOMContentLoaded', function() {
         material.roughnessMap = roughnessTexture;
         material.displacementMap = displacementTexture;
         material.aoMap = aoTexture;
-        
-        // Apply texture scale (repeat)
-        const textureRepeat = parseFloat(textureScale.value);
-        [material.map, material.normalMap, material.roughnessMap, 
-         material.displacementMap, material.aoMap].forEach(tex => {
-            if (tex) {
-                tex.wrapS = THREE.RepeatWrapping;
-                tex.wrapT = THREE.RepeatWrapping;
-                tex.repeat.set(textureRepeat, textureRepeat);
-            }
-        });
         
         // Update material parameters
         if (normalTexture) {
@@ -247,34 +231,12 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Set up event listeners
     function setupEventListeners() {
-        // Completely revamped file upload handling to fix the first-click issue
+        // File upload via input
+        textureUpload.addEventListener('change', handleFileUpload);
         
-        // Direct file input handler
-        textureUpload.addEventListener('change', function(e) {
-            if (this.files && this.files[0]) {
-                currentFile = this.files[0];
-                processUploadedFile(currentFile);
-            }
-        });
-        
-        // Make sure click events don't propagate wrong
+        // FIX for file upload bug: Stop propagation on the input click
         textureUpload.addEventListener('click', function(e) {
             e.stopPropagation();
-        });
-        
-        // Better click delegation for the upload area
-        uploadArea.addEventListener('click', function(e) {
-            // Don't propagate from preview overlay
-            if (e.target.closest('.preview-overlay')) {
-                return;
-            }
-            
-            // Either click was on upload-content or bubbled up from it
-            if (!hasUploadedImage || e.target.closest('.upload-content')) {
-                // Use a timeout to avoid event handling conflicts
-                textureUpload.value = ""; // Clear previous value to ensure change event fires
-                setTimeout(() => textureUpload.click(), 50);
-            }
         });
         
         // Drag and drop events
@@ -292,17 +254,28 @@ document.addEventListener('DOMContentLoaded', function() {
             uploadArea.classList.remove('active');
             
             if (e.dataTransfer.files.length) {
-                currentFile = e.dataTransfer.files[0];
-                processUploadedFile(currentFile);
+                processUploadedFile(e.dataTransfer.files[0]);
             }
         });
         
-        // Change image button
-        changeImageBtn.addEventListener('click', (e) => {
+        // Fix for the upload content click handler
+        uploadContent.addEventListener('click', (e) => {
+            e.stopPropagation(); // Stop event from bubbling up
+            
+            // Only trigger file input if no image is uploaded yet
+            if (!hasUploadedImage) {
+                // Ensure the input is cleared to trigger change event even on the same file
+                textureUpload.value = '';
+                setTimeout(() => {
+                    textureUpload.click();
+                }, 10);
+            }
+        });
+        
+        // Delete image
+        deleteImageBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            // Reset file input to make sure change event fires even with same file
-            textureUpload.value = "";
-            setTimeout(() => textureUpload.click(), 50);
+            clearImage();
         });
         
         // Sliders
@@ -312,7 +285,6 @@ document.addEventListener('DOMContentLoaded', function() {
         displacementStrength.addEventListener('input', updateTextures);
         aoStrength.addEventListener('input', updateTextures);
         metalness.addEventListener('input', updateMaterial);
-        textureScale.addEventListener('input', updateTextureScale);
         
         // Light position
         lightX.addEventListener('input', updateLightPosition);
@@ -328,34 +300,41 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Export ZIP
         exportZip.addEventListener('click', exportAllMapsAsZip);
-        
-        // Add tooltips to controls
-        setupTooltips();
     }
     
-    // Set up tooltips for controls
-    function setupTooltips() {
-        // Add helpful tooltips to each control
-        const tooltips = {
-            'base-strength': 'Adjust the intensity of the base color',
-            'normal-strength': 'Control the height of surface details',
-            'roughness-strength': 'Adjust how rough or smooth the surface appears',
-            'displacement-strength': 'Control how much geometry is displaced',
-            'ao-strength': 'Enhance or reduce ambient shadows',
-            'metalness': 'Set how metallic the material appears',
-            'texture-scale': 'Adjust how many times the texture repeats across the surface',
-            'light-x': 'Move light left or right',
-            'light-y': 'Move light up or down',
-            'light-z': 'Move light closer or further away'
-        };
+    // Clear the uploaded image
+    function clearImage() {
+        // Reset the UI
+        previewOverlay.style.display = 'none';
+        uploadedImage.src = '';
+        hasUploadedImage = false;
         
-        // Apply tooltips to labels
-        Object.keys(tooltips).forEach(id => {
-            const label = document.querySelector(`label[for="${id}"]`);
-            if (label) {
-                label.setAttribute('data-tooltip', tooltips[id]);
-            }
-        });
+        // Remove textures from sphere
+        if (sphere && sphere.material) {
+            sphere.material.map = null;
+            sphere.material.normalMap = null;
+            sphere.material.roughnessMap = null;
+            sphere.material.displacementMap = null;
+            sphere.material.aoMap = null;
+            sphere.material.needsUpdate = true;
+        }
+        
+        // Clear canvases
+        clearCanvas(baseCanvas);
+        clearCanvas(normalCanvas);
+        clearCanvas(roughnessCanvas);
+        clearCanvas(displacementCanvas);
+        clearCanvas(aoCanvas);
+        
+        // Reset textures
+        baseTexture = null;
+        normalTexture = null;
+        roughnessTexture = null;
+        displacementTexture = null;
+        aoTexture = null;
+        originalImageData = null;
+        
+        showNotification('Image removed', 'info');
     }
     
     // Clear a canvas
@@ -364,33 +343,21 @@ document.addEventListener('DOMContentLoaded', function() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
     
-    // Handle file upload - Added as a backup method to ensure file uploads work
+    // Handle file upload
     function handleFileUpload(e) {
-        console.log("File input change detected");
+        console.log("File upload triggered", e.target.files);
         if (e.target.files && e.target.files.length) {
-            currentFile = e.target.files[0];
-            console.log("Processing file:", currentFile.name);
-            processUploadedFile(currentFile);
-        } else {
-            console.log("No files selected in the file input");
+            processUploadedFile(e.target.files[0]);
         }
     }
     
     // Process uploaded file
     function processUploadedFile(file) {
-        console.log("Processing file:", file ? file.name : "No file");
-        
-        if (!file) {
-            showNotification('No file selected. Please try again.', 'error');
-            return;
-        }
-        
-        if (!file.type.match('image.*')) {
+        console.log("Processing file:", file);
+        if (!file || !file.type.match('image.*')) {
             showNotification('Please upload an image file.', 'error');
             return;
         }
-        
-        console.log("File type valid:", file.type);
         
         // Show loading state
         uploadArea.classList.add('processing');
@@ -799,31 +766,6 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log("AO map generated");
     }
     
-    // Update texture scale
-    function updateTextureScale() {
-        scaleValue.textContent = parseFloat(textureScale.value).toFixed(1);
-        
-        // Apply scale to all textures
-        const scale = parseFloat(textureScale.value);
-        
-        if (sphere && sphere.material) {
-            const material = sphere.material;
-            
-            // Update texture scaling
-            [material.map, material.normalMap, material.roughnessMap, 
-             material.displacementMap, material.aoMap].forEach(tex => {
-                if (tex) {
-                    tex.wrapS = THREE.RepeatWrapping;
-                    tex.wrapT = THREE.RepeatWrapping;
-                    tex.repeat.set(scale, scale);
-                    tex.needsUpdate = true;
-                }
-            });
-            
-            material.needsUpdate = true;
-        }
-    }
-    
     // Update textures based on slider values
     function updateTextures() {
         // Update display values
@@ -940,8 +882,6 @@ document.addEventListener('DOMContentLoaded', function() {
             zip.file(`${textureBaseName}_ao.png`, dataURLToBlob(aoCanvas.toDataURL('image/png')), {base64: false});
             exportCount++;
         }
-        
-
         
         if (exportCount === 0) {
             if (loadingEl.parentNode) {
