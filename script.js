@@ -2,14 +2,13 @@
 document.addEventListener('DOMContentLoaded', function() {
     
     // Global variables
-    let scene, camera, renderer, model, light, grid;
+    let scene, camera, renderer, sphere, light, grid;
     let baseTexture, normalTexture, roughnessTexture, displacementTexture, aoTexture;
     let originalImageData;
     let hasUploadedImage = false;
     let autoRotate = true;
     let rotationSpeed = { x: 0.0005, y: 0.004 };
     let isDraggingSlider = false;
-    let currentModel = 'sphere';
     let animationFrameId = null;
     
     // DOM Elements
@@ -20,9 +19,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const uploadedImage = document.getElementById('uploaded-image');
     const deleteImageBtn = document.getElementById('delete-image');
     const modelContainer = document.getElementById('model-container');
-    
-    // Model selection buttons
-    const modelButtons = document.querySelectorAll('.model-btn');
     
     // Navigation Tabs
     const navTabs = document.querySelectorAll('.nav-tab');
@@ -191,8 +187,8 @@ document.addEventListener('DOMContentLoaded', function() {
         grid.position.y = -1.5;
         scene.add(grid);
     
-        // Create initial model (sphere by default)
-        createModel();
+        // Create initial sphere
+        createSphere();
         
         // Add loading indicator until fully loaded
         showLoadingIndicator('Initializing 3D environment...', 0);
@@ -216,29 +212,15 @@ document.addEventListener('DOMContentLoaded', function() {
         animate();
     }
     
-    // Create or update the 3D model with textures
-    function createModel() {
-        // Remove existing model if it exists
-        if (model) {
-            scene.remove(model);
+    // Create or update the sphere with textures
+    function createSphere() {
+        // Remove existing sphere if it exists
+        if (sphere) {
+            scene.remove(sphere);
         }
         
-        let geometry;
-        
-        // Create geometry based on selected model type
-        switch (currentModel) {
-            case 'sphere':
-                geometry = new THREE.SphereGeometry(1, 64, 64);
-                break;
-            case 'cube':
-                geometry = new THREE.BoxGeometry(1.5, 1.5, 1.5, 10, 10, 10);
-                break;
-            case 'plane':
-                geometry = new THREE.PlaneGeometry(2, 2, 32, 32);
-                break;
-            default:
-                geometry = new THREE.SphereGeometry(1, 64, 64);
-        }
+        // Create geometry with higher segment count for better displacement
+        const geometry = new THREE.SphereGeometry(1, 64, 64);
         
         // Create material
         const material = new THREE.MeshStandardMaterial({
@@ -277,14 +259,14 @@ document.addEventListener('DOMContentLoaded', function() {
         material.needsUpdate = true;
     
         // Create mesh
-        model = new THREE.Mesh(geometry, material);
+        sphere = new THREE.Mesh(geometry, material);
         
         // Set up UV2 coordinates for AO map
         geometry.setAttribute('uv2', geometry.attributes.uv);
         
-        scene.add(model);
+        scene.add(sphere);
         
-        console.log(`Created ${currentModel} model with textures:`, {
+        console.log("Sphere created with textures:", {
             base: !!material.map,
             normal: !!material.normalMap,
             roughness: !!material.roughnessMap,
@@ -297,16 +279,16 @@ document.addEventListener('DOMContentLoaded', function() {
     function animate() {
         animationFrameId = requestAnimationFrame(animate);
         
-        // Add automatic or manual rotation to the model
-        if (model) {
+        // Add automatic or manual rotation to the sphere
+        if (sphere) {
             if (autoRotate) {
-                model.rotation.y += rotationSpeed.y;
-                model.rotation.x += rotationSpeed.x;
+                sphere.rotation.y += rotationSpeed.y;
+                sphere.rotation.x += rotationSpeed.x;
                 
                 // Update sliders to match current rotation
                 if (!isDraggingSlider) {
-                    rotationX.value = ((model.rotation.x % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2) - Math.PI;
-                    rotationY.value = ((model.rotation.y % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2) - Math.PI;
+                    rotationX.value = ((sphere.rotation.x % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2) - Math.PI;
+                    rotationY.value = ((sphere.rotation.y % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2) - Math.PI;
                 }
             }
         }
@@ -372,26 +354,6 @@ document.addEventListener('DOMContentLoaded', function() {
         deleteImageBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             clearImage();
-        });
-        
-        // Model selection buttons
-        modelButtons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                // Remove active class from all buttons
-                modelButtons.forEach(b => b.classList.remove('active'));
-                
-                // Add active class to clicked button
-                btn.classList.add('active');
-                
-                // Update current model
-                currentModel = btn.dataset.model;
-                
-                // Create new model
-                createModel();
-                
-                // Show feedback notification
-                showNotification(`Switched to ${currentModel} view`, 'info');
-            });
         });
         
         // Sliders
@@ -460,14 +422,14 @@ document.addEventListener('DOMContentLoaded', function() {
         uploadedImage.src = '';
         hasUploadedImage = false;
         
-        // Remove textures from model
-        if (model && model.material) {
-            model.material.map = null;
-            model.material.normalMap = null;
-            model.material.roughnessMap = null;
-            model.material.displacementMap = null;
-            model.material.aoMap = null;
-            model.material.needsUpdate = true;
+        // Remove textures from sphere
+        if (sphere && sphere.material) {
+            sphere.material.map = null;
+            sphere.material.normalMap = null;
+            sphere.material.roughnessMap = null;
+            sphere.material.displacementMap = null;
+            sphere.material.aoMap = null;
+            sphere.material.needsUpdate = true;
         }
         
         // Clear canvases
@@ -544,8 +506,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         updateProgress(90);
                         updateLoadingMessage('Applying to 3D model...');
                         
-                        // Recreate the model to apply textures
-                        createModel();
+                        // Recreate the sphere to apply textures
+                        createSphere();
                         
                         // Remove loading state
                         setTimeout(() => {
@@ -990,26 +952,26 @@ document.addEventListener('DOMContentLoaded', function() {
         displacementValue.textContent = parseFloat(displacementStrength.value).toFixed(1);
         aoValue.textContent = parseFloat(aoStrength.value).toFixed(1);
         
-        // Check if we need to update the model material
-        if (model && model.material) {
+        // Check if we need to update the sphere material
+        if (sphere && sphere.material) {
             // Update normal map intensity
-            if (model.material.normalMap) {
-                model.material.normalScale.set(
+            if (sphere.material.normalMap) {
+                sphere.material.normalScale.set(
                     parseFloat(normalStrength.value),
                     parseFloat(normalStrength.value)
                 );
             }
             
             // Update displacement map intensity
-            if (model.material.displacementMap) {
-                model.material.displacementScale = parseFloat(displacementStrength.value);
+            if (sphere.material.displacementMap) {
+                sphere.material.displacementScale = parseFloat(displacementStrength.value);
             }
             
             // Make sure material updates
-            model.material.needsUpdate = true;
+            sphere.material.needsUpdate = true;
         } else {
-            // If model doesn't exist, create it
-            createModel();
+            // If sphere doesn't exist, create it
+            createSphere();
         }
     }
     
@@ -1018,9 +980,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // Update display values
         metalnessValue.textContent = parseFloat(metalness.value).toFixed(1);
         
-        if (model && model.material) {
-            model.material.metalness = parseFloat(metalness.value);
-            model.material.needsUpdate = true;
+        if (sphere && sphere.material) {
+            sphere.material.metalness = parseFloat(metalness.value);
+            sphere.material.needsUpdate = true;
         }
     }
     
@@ -1154,7 +1116,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Update rotation from sliders
     function updateRotation() {
-        if (!model) return;
+        if (!sphere) return;
         
         // Disable auto-rotate when user drags sliders
         if (!isDraggingSlider) {
@@ -1164,8 +1126,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         // Apply rotation from sliders
-        model.rotation.x = parseFloat(rotationX.value);
-        model.rotation.y = parseFloat(rotationY.value);
+        sphere.rotation.x = parseFloat(rotationX.value);
+        sphere.rotation.y = parseFloat(rotationY.value);
     }
     
     // Export Three.js code
@@ -1216,13 +1178,8 @@ const material = new THREE.MeshStandardMaterial({
     displacementScale: ${displacementStrength.value}
 });
 
-// Create a mesh with your preferred geometry
-${currentModel === 'sphere' ? 
-    `const geometry = new THREE.SphereGeometry(2, 64, 64); // High resolution for displacement` :
-    currentModel === 'cube' ? 
-    `const geometry = new THREE.BoxGeometry(3, 3, 3, 10, 10, 10); // Subdivided for better displacement` :
-    `const geometry = new THREE.PlaneGeometry(4, 4, 32, 32); // Subdivided for displacement`
-}
+// Create a sphere geometry with high resolution for better displacement
+const geometry = new THREE.SphereGeometry(2, 64, 64);
 const mesh = new THREE.Mesh(geometry, material);
 
 // For ambient occlusion to work, we need UV2
