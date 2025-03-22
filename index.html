@@ -14,200 +14,640 @@
                 <h1>Texture Gen v2</h1>
                 <p>Create professional PBR texture maps instantly</p>
             </div>
+            <div class="nav-tabs">
+                <button class="nav-tab active" data-page="generator">Generator</button>
+                <button class="nav-tab" data-page="help">Help</button>
+                <button class="nav-tab" data-page="about">About</button>
+            </div>
             <div class="nav-actions">
-                <button id="export-zip" class="action-btn">
+                <button id="export-zip" class="action-btn export-zip-btn">
                     <i class="fas fa-file-archive"></i> Export All Maps as ZIP
                 </button>
-                <button id="export-threejs" class="action-btn">
+                <button id="export-threejs" class="action-btn export-code-btn">
                     <i class="fas fa-code"></i> Export Three.js Code
                 </button>
             </div>
         </nav>
 
-        <main>
-            <div class="top-container">
-                <div class="upload-section">
-                    <div class="upload-area" id="upload-area">
-                        <div class="upload-content">
-                            <i class="fas fa-cloud-upload-alt"></i>
-                            <p>Drag & drop your texture image or</p>
-                            <label for="texture-upload" class="upload-btn">Browse Files</label>
-                            <input type="file" id="texture-upload" accept="image/*" hidden>
-                            <p class="upload-hint">Supported formats: JPG, PNG, WebP</p>
+        <!-- Generator Page (Default) -->
+        <div class="page-content" id="generator-page">
+            <main>
+                <div class="top-container">
+                    <div class="upload-section">
+                        <div class="upload-area" id="upload-area">
+                            <div class="upload-content">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <p>Drag & drop your texture image or</p>
+                                <label for="texture-upload" class="upload-btn">Browse Files</label>
+                                <input type="file" id="texture-upload" accept="image/*" hidden>
+                                <p class="upload-hint">Supported formats: JPG, PNG, WebP</p>
+                            </div>
+                            <div class="preview-overlay" id="preview-overlay">
+                                <img id="uploaded-image" src="" alt="Uploaded texture">
+                                <button class="delete-btn" id="delete-image">Delete Texture</button>
+                            </div>
                         </div>
-                        <div class="preview-overlay" id="preview-overlay">
-                            <img id="uploaded-image" src="" alt="Uploaded texture">
-                            <button class="delete-btn" id="delete-image">Delete Texture</button>
+                    </div>
+                    
+                    <div class="preview-3d">
+                        <div id="sphere-container"></div>
+                        <div class="rotation-controls">
+                            <div class="rotation-group">
+                                <label>Manual Rotation:</label>
+                                <div class="rotation-sliders">
+                                    <div class="rotation-slider">
+                                        <span>X</span>
+                                        <input type="range" id="rotation-x" min="-3.14" max="3.14" step="0.01" value="0">
+                                    </div>
+                                    <div class="rotation-slider">
+                                        <span>Y</span>
+                                        <input type="range" id="rotation-y" min="-3.14" max="3.14" step="0.01" value="0">
+                                    </div>
+                                    <button id="toggle-auto-rotate" class="rotation-btn" title="Toggle Auto-Rotation"><i class="fas fa-sync-alt"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="controls-container">
+                    <h3>Texture Settings</h3>
+                    <div class="controls-grid">
+                        <div class="control-group">
+                            <label for="base-strength">Base Color Strength</label>
+                            <div class="slider-container">
+                                <input type="range" id="base-strength" min="0" max="1" step="0.01" value="1">
+                                <span class="value" id="base-value">1.0</span>
+                            </div>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label for="normal-strength">Normal Strength</label>
+                            <div class="slider-container">
+                                <input type="range" id="normal-strength" min="0" max="2" step="0.01" value="1">
+                                <span class="value" id="normal-value">1.0</span>
+                            </div>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label for="roughness-strength">Roughness Strength</label>
+                            <div class="slider-container">
+                                <input type="range" id="roughness-strength" min="0" max="1" step="0.01" value="0.5">
+                                <span class="value" id="roughness-value">0.5</span>
+                            </div>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label for="displacement-strength">Displacement Strength</label>
+                            <div class="slider-container">
+                                <input type="range" id="displacement-strength" min="0" max="1" step="0.01" value="0.2">
+                                <span class="value" id="displacement-value">0.2</span>
+                            </div>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label for="ao-strength">AO Strength</label>
+                            <div class="slider-container">
+                                <input type="range" id="ao-strength" min="0" max="1" step="0.01" value="0.5">
+                                <span class="value" id="ao-value">0.5</span>
+                            </div>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label for="metalness">Metalness</label>
+                            <div class="slider-container">
+                                <input type="range" id="metalness" min="0" max="1" step="0.01" value="0">
+                                <span class="value" id="metalness-value">0.0</span>
+                            </div>
+                        </div>
+                        
+                        <div class="control-group light-group">
+                            <label>Light Position</label>
+                            <div class="light-controls">
+                                <div class="light-control">
+                                    <span>X</span>
+                                    <input type="range" id="light-x" min="-10" max="10" step="0.1" value="5">
+                                </div>
+                                <div class="light-control">
+                                    <span>Y</span>
+                                    <input type="range" id="light-y" min="-10" max="10" step="0.1" value="5">
+                                </div>
+                                <div class="light-control">
+                                    <span>Z</span>
+                                    <input type="range" id="light-z" min="-10" max="10" step="0.1" value="5">
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
                 
-                <div class="preview-3d">
-                    <div id="sphere-container"></div>
-                    <div class="rotation-controls">
-                        <div class="rotation-group">
-                            <label>Manual Rotation:</label>
-                            <div class="rotation-sliders">
-                                <div class="rotation-slider">
-                                    <span>X</span>
-                                    <input type="range" id="rotation-x" min="-3.14" max="3.14" step="0.01" value="0">
-                                </div>
-                                <div class="rotation-slider">
-                                    <span>Y</span>
-                                    <input type="range" id="rotation-y" min="-3.14" max="3.14" step="0.01" value="0">
-                                </div>
-                                <button id="toggle-auto-rotate" class="rotation-btn" title="Toggle Auto-Rotation"><i class="fas fa-sync-alt"></i></button>
-                            </div>
+                <div class="export-options">
+                    <h3>Export Options</h3>
+                    <div class="export-container">
+                        <div class="export-checkbox">
+                            <input type="checkbox" id="export-base" checked>
+                            <label for="export-base">Base Color</label>
+                        </div>
+                        <div class="export-checkbox">
+                            <input type="checkbox" id="export-normal" checked>
+                            <label for="export-normal">Normal</label>
+                        </div>
+                        <div class="export-checkbox">
+                            <input type="checkbox" id="export-roughness" checked>
+                            <label for="export-roughness">Roughness</label>
+                        </div>
+                        <div class="export-checkbox">
+                            <input type="checkbox" id="export-displacement" checked>
+                            <label for="export-displacement">Displacement</label>
+                        </div>
+                        <div class="export-checkbox">
+                            <input type="checkbox" id="export-ao" checked>
+                            <label for="export-ao">Ambient Occlusion</label>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="controls-container">
-                <h3>Texture Settings</h3>
-                <div class="controls-grid">
-                    <div class="control-group">
-                        <label for="base-strength">Base Color Strength</label>
-                        <div class="slider-container">
-                            <input type="range" id="base-strength" min="0" max="1" step="0.01" value="1">
-                            <span class="value" id="base-value">1.0</span>
+                <div class="map-container">
+                    <div class="map-preview">
+                        <div class="map-header">
+                            <h3>Base Color Map</h3>
+                            <button class="download-btn" id="download-base">
+                                <i class="fas fa-download"></i>
+                            </button>
                         </div>
+                        <canvas id="base-map"></canvas>
                     </div>
-                    
-                    <div class="control-group">
-                        <label for="normal-strength">Normal Strength</label>
-                        <div class="slider-container">
-                            <input type="range" id="normal-strength" min="0" max="2" step="0.01" value="1">
-                            <span class="value" id="normal-value">1.0</span>
+                    <div class="map-preview">
+                        <div class="map-header">
+                            <h3>Normal Map</h3>
+                            <button class="download-btn" id="download-normal">
+                                <i class="fas fa-download"></i>
+                            </button>
                         </div>
+                        <canvas id="normal-map"></canvas>
                     </div>
-                    
-                    <div class="control-group">
-                        <label for="roughness-strength">Roughness Strength</label>
-                        <div class="slider-container">
-                            <input type="range" id="roughness-strength" min="0" max="1" step="0.01" value="0.5">
-                            <span class="value" id="roughness-value">0.5</span>
+                    <div class="map-preview">
+                        <div class="map-header">
+                            <h3>Roughness Map</h3>
+                            <button class="download-btn" id="download-roughness">
+                                <i class="fas fa-download"></i>
+                            </button>
                         </div>
+                        <canvas id="roughness-map"></canvas>
                     </div>
-                    
-                    <div class="control-group">
-                        <label for="displacement-strength">Displacement Strength</label>
-                        <div class="slider-container">
-                            <input type="range" id="displacement-strength" min="0" max="1" step="0.01" value="0.2">
-                            <span class="value" id="displacement-value">0.2</span>
+                    <div class="map-preview">
+                        <div class="map-header">
+                            <h3>Displacement Map</h3>
+                            <button class="download-btn" id="download-displacement">
+                                <i class="fas fa-download"></i>
+                            </button>
                         </div>
+                        <canvas id="displacement-map"></canvas>
                     </div>
-                    
-                    <div class="control-group">
-                        <label for="ao-strength">AO Strength</label>
-                        <div class="slider-container">
-                            <input type="range" id="ao-strength" min="0" max="1" step="0.01" value="0.5">
-                            <span class="value" id="ao-value">0.5</span>
+                    <div class="map-preview">
+                        <div class="map-header">
+                            <h3>AO Map</h3>
+                            <button class="download-btn" id="download-ao">
+                                <i class="fas fa-download"></i>
+                            </button>
                         </div>
-                    </div>
-                    
-                    <div class="control-group">
-                        <label for="metalness">Metalness</label>
-                        <div class="slider-container">
-                            <input type="range" id="metalness" min="0" max="1" step="0.01" value="0">
-                            <span class="value" id="metalness-value">0.0</span>
-                        </div>
-                    </div>
-                    
-                    <div class="control-group light-group">
-                        <label>Light Position</label>
-                        <div class="light-controls">
-                            <div class="light-control">
-                                <span>X</span>
-                                <input type="range" id="light-x" min="-10" max="10" step="0.1" value="5">
-                            </div>
-                            <div class="light-control">
-                                <span>Y</span>
-                                <input type="range" id="light-y" min="-10" max="10" step="0.1" value="5">
-                            </div>
-                            <div class="light-control">
-                                <span>Z</span>
-                                <input type="range" id="light-z" min="-10" max="10" step="0.1" value="5">
-                            </div>
-                        </div>
+                        <canvas id="ao-map"></canvas>
                     </div>
                 </div>
-            </div>
-            
-            <div class="export-options">
-                <h3>Export Options</h3>
-                <div class="export-container">
-                    <div class="export-checkbox">
-                        <input type="checkbox" id="export-base" checked>
-                        <label for="export-base">Base Color</label>
-                    </div>
-                    <div class="export-checkbox">
-                        <input type="checkbox" id="export-normal" checked>
-                        <label for="export-normal">Normal</label>
-                    </div>
-                    <div class="export-checkbox">
-                        <input type="checkbox" id="export-roughness" checked>
-                        <label for="export-roughness">Roughness</label>
-                    </div>
-                    <div class="export-checkbox">
-                        <input type="checkbox" id="export-displacement" checked>
-                        <label for="export-displacement">Displacement</label>
-                    </div>
-                    <div class="export-checkbox">
-                        <input type="checkbox" id="export-ao" checked>
-                        <label for="export-ao">Ambient Occlusion</label>
-                    </div>
-                </div>
-            </div>
+            </main>
+        </div>
 
-            <div class="map-container">
-                <div class="map-preview">
-                    <div class="map-header">
-                        <h3>Base Color Map</h3>
-                        <button class="download-btn" id="download-base">
-                            <i class="fas fa-download"></i>
-                        </button>
+        <!-- Help Page -->
+        <div class="page-content hidden" id="help-page">
+            <div class="help-container">
+                <h2>How to Use SVG Partycle Generator</h2>
+                <p class="help-description">This tool converts SVG files into dynamic, interactive particle animations. Here's how to get started:</p>
+                
+                <div class="help-section-grid">
+                    <div class="help-section">
+                        <h3>Basic Controls</h3>
+                        <ul class="help-list">
+                            <li>
+                                <strong>Upload SVG:</strong> Click "Choose File" or drag-and-drop your SVG
+                            </li>
+                            <li>
+                                <strong>Layer Management:</strong> Add multiple SVGs and control their order and visibility from the Layers panel
+                            </li>
+                            <li>
+                                <strong>Layer Position:</strong> Move and rotate selected SVG layer in 3D space
+                            </li>
+                            <li>
+                                <strong>SVG Scale:</strong> Adjust the overall size of your SVG
+                            </li>
+                            <li>
+                                <strong>SVG Depth:</strong> Add 3D depth to your particles or also elevation for a more dimensional look
+                            </li>
+                            <li>
+                                <strong>Preserve Colors:</strong> Choose to keep original SVG colors instead of applying custom colors
+                            </li>
+                            <li>
+                                <strong>Include Strokes:</strong> Enable to include periphery for SVG stroke outlines (stroke width only)
+                            </li>
+                            <li>
+                                <strong>Stroke Width:</strong> Control how thick and detailed stroke are (too narrow stroke appear)
+                            </li>
+                            <li>
+                                <strong>Particle Count:</strong> Control how many particles make up your shape
+                            </li>
+                            <li>
+                                <strong>Particle Density:</strong> Adjust sampling density (lower values mean more particles)
+                            </li>
+                            <li>
+                                <strong>Size Range:</strong> Set minimum and maximum particle sizes for more natural look
+                            </li>
+                            <li>
+                                <strong>High-Performance Mode:</strong> Enable to use structured rendering for handling animations with large numbers of particles
+                            </li>
+                            <li>
+                                <strong>Color:</strong> Choose between solid color or gradient options (or preserve original SVG colors)
+                            </li>
+                            <li>
+                                <strong>Gradient Options:</strong> Control the direction of the color gradient
+                            </li>
+                            <li>
+                                <strong>Animation Speed:</strong> Control how quickly particles animate
+                            </li>
+                        </ul>
                     </div>
-                    <canvas id="base-map"></canvas>
+                    
+                    <div class="help-section">
+                        <h3>Interactive Features</h3>
+                        <ul class="help-list">
+                            <li>
+                                <strong>Layer Management</strong>
+                                <p>Import multiple SVGs and manage them in separate layers. Reorder layers with drag-and-drop functionality, rename, duplicate individual layers, or delete layers you no longer need.</p>
+                            </li>
+                            <li>
+                                <strong>Layer Positioning</strong>
+                                <p>Easily X, Y, and Z-axis position controls to move and rotate in 3D space. Fine-tune exact position using position percentage of elements.</p>
+                            </li>
+                            <li>
+                                <strong>Mouse Interaction</strong>
+                                <p>Move your cursor over the particles to see them react. Adjust interaction radius and strength to customize the effect.</p>
+                            </li>
+                            <li>
+                                <strong>Send-Collider Effect</strong>
+                                <p>Make particles bounce like sand, moving away from your cursor and gradually returning to their original positions.</p>
+                            </li>
+                            <li>
+                                <strong>Repel Effect</strong>
+                                <p>When activated, particles move away from your cursor instead of being attracted to it.</p>
+                            </li>
+                            <li>
+                                <strong>Rigid Body Physics</strong>
+                                <p>Add 3D gravity, bounce and particle physics with force. Adjust the size, position, and force strength to create different effects.</p>
+                            </li>
+                            <li>
+                                <strong>Camera Controls</strong>
+                                <p>Control the 3D rotation, zoom and pan speeds to control how the particles move through three-dimensional space.</p>
+                            </li>
+                            <li>
+                                <strong>Glow Effect & Bloom</strong>
+                                <p>Adds light bloom around particles for a more vibrant appearance. Adjust bloom strength, colors and threshold for precise control.</p>
+                            </li>
+                            <li>
+                                <strong>Noise Movement</strong>
+                                <p>Adds organic, flowing movement to particles using 3D Perlin noise for more natural animations.</p>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
-                <div class="map-preview">
-                    <div class="map-header">
-                        <h3>Normal Map</h3>
-                        <button class="download-btn" id="download-normal">
-                            <i class="fas fa-download"></i>
-                        </button>
-                    </div>
-                    <canvas id="normal-map"></canvas>
+                
+                <div class="help-section">
+                    <h3>New Features</h3>
+                    <ul class="help-list">
+                        <li>
+                            <strong>Layer Management:</strong> Import and manage multiple SVGs as separate layers. Control their visibility, order, and delete unwanted layers from the layers panel.
+                        </li>
+                        <li>
+                            <strong>Layer Positioning:</strong> Move and rotate selected layers in 3D space for precise control over your composition.
+                        </li>
+                        <li>
+                            <strong>Gradient Options:</strong> Control the angle and direction of color gradients for more creative possibilities.
+                        </li>
+                        <li>
+                            <strong>Rigid Body Physics:</strong> Add a physical collider that pushes particles away with force, creating dynamic interactions.
+                        </li>
+                        <li>
+                            <strong>High-Performance Mode:</strong> Uses structured rendering for dramatically improved performance with high particle counts (≥10K+ particles).
+                        </li>
+                        <li>
+                            <strong>Original Color Preservation:</strong> Keep the original colors from your SVG instead of applying custom colors or gradients.
+                        </li>
+                        <li>
+                            <strong>GIF Export:</strong> Export your animated particle system as an animated GIF to use on social media or websites.
+                        </li>
+                        <li>
+                            <strong>Performance Website:</strong> View real-time frame rate and particle count metrics to optimize your creations.
+                        </li>
+                    </ul>
                 </div>
-                <div class="map-preview">
-                    <div class="map-header">
-                        <h3>Roughness Map</h3>
-                        <button class="download-btn" id="download-roughness">
-                            <i class="fas fa-download"></i>
-                        </button>
-                    </div>
-                    <canvas id="roughness-map"></canvas>
+                
+                <div class="help-section">
+                    <h3>Tips & Tricks</h3>
+                    <ul class="help-list">
+                        <li>
+                            <strong>Layer Management:</strong> For complex compositions, build up your scene using multiple SVG layers. Import background elements first, then stack more complex foreground elements.
+                        </li>
+                        <li>
+                            <strong>Layer Options:</strong> Use "Solo" button to isolate 3D layers to work on one layer by viewing different elements of different Z positions.
+                        </li>
+                        <li>
+                            <strong>Requiring SVGs:</strong> For best results, use SVGs with clean, simple shapes. Complex SVGs with many elements may require higher particle counts.
+                        </li>
+                        <li>
+                            <strong>Working with Strokes:</strong> Enable "Include Strokes" with high stroke detail for edge-aligned line effects with particle strokes. Works best with SVGs that have defined stroke paths.
+                        </li>
+                        <li>
+                            <strong>Preserving Colors:</strong> When working with colorful logos or illustrations, enable "Preserve SVG Colors" to maintain the original design's color scheme.
+                        </li>
+                        <li>
+                            <strong>Zoom Effect:</strong> The send collider effect creates a more physical interactive feel. Increasing depth value increases effect speed for faster particles.
+                        </li>
+                        <li>
+                            <strong>Rigid Body:</strong> The rigid body collider can create dynamic effects as particles fall and bounce. Try different collider sizes and force strengths for varied effects.
+                        </li>
+                        <li>
+                            <strong>Camera Depth:</strong> Increase SVG depth to create more pronounced 3D rotations. It changes the camera depth value.
+                        </li>
+                        <li>
+                            <strong>Mouse Interaction:</strong> For subtle interactions, lower the interaction strength. For dramatic effects, increase both radius and strength.
+                        </li>
+                        <li>
+                            <strong>Camera Tips:</strong> Reduce pan sensitivity if rotation feels too fast. Increase zoom speed for quicker zoom in/out effects.
+                        </li>
+                        <li>
+                            <strong>Bloom Settings:</strong> For a subtle glow, use low bloom strength with high threshold. For dramatic glow, increase strength and reduce bloom white boosting.
+                        </li>
+                        <li>
+                            <strong>Color Tips:</strong> The most vibrant glows happen when using bright colors contrasting against dark ones. Use saturated gradients for best results.
+                        </li>
+                        <li>
+                            <strong>Exporting SVGs for Animation:</strong> Change the animation spread value to create simpler visual effects. Try different collider sizes and collider spread to find the right balance for your design.
+                        </li>
+                        <li>
+                            <strong>Rigid Body Tip:</strong> Using value "Enable Rigid Body" is possible. Try increasing the force strength and adjusting the position of the collider.
+                        </li>
+                        <li>
+                            <strong>HSL vs RGB:</strong> HSL colors provide more intuitive control for animations and transitions. Experiment with hue rotation animations!
+                        </li>
+                        <li>
+                            <strong>Glow Hot Values:</strong> Choose bloom strength and rotate while decreasing threshold for more noticeable glow effects.
+                        </li>
+                        <li>
+                            <strong>Camera Positioning:</strong> Control the gradient angle to create different visual effects. Try increasing the force strength and adjusting the position of the collider.
+                        </li>
+                        <li>
+                            <strong>GIF Export Taking Too Long:</strong> Reduce particle count and animation complexity before exporting GIFs for faster processing.
+                        </li>
+                        <li>
+                            <strong>Important Code Not Working:</strong> Make sure to include all required Three.js libraries as listed in the exported code comments.
+                        </li>
+                    </ul>
                 </div>
-                <div class="map-preview">
-                    <div class="map-header">
-                        <h3>Displacement Map</h3>
-                        <button class="download-btn" id="download-displacement">
-                            <i class="fas fa-download"></i>
-                        </button>
-                    </div>
-                    <canvas id="displacement-map"></canvas>
-                </div>
-                <div class="map-preview">
-                    <div class="map-header">
-                        <h3>AO Map</h3>
-                        <button class="download-btn" id="download-ao">
-                            <i class="fas fa-download"></i>
-                        </button>
-                    </div>
-                    <canvas id="ao-map"></canvas>
+                
+                <div class="help-section">
+                    <h3>Common Issues & Solutions</h3>
+                    <ul class="help-list">
+                        <li>
+                            <strong>SVG Not Working:</strong> Make sure your SVG has visible elements. Some SVGs may need to be pre-processed to make them compatible.
+                        </li>
+                        <li>
+                            <strong>Performance Issues:</strong> For complex scenes with thousands of particles, enable "High Performance Mode" which uses structured rendering for better performance.
+                        </li>
+                        <li>
+                            <strong>Layer Management:</strong> If you can't see your newest SVG, check the layer panel to ensure it's visible type and properly stacked (might be behind other layers).
+                        </li>
+                        <li>
+                            <strong>Colors Not Matching:</strong> If your SVG colors aren't appear correctly, make sure "Preserve SVG Colors" is enabled in the SVG Source section.
+                        </li>
+                        <li>
+                            <strong>Mouse Interaction Not Working:</strong> Check that "Mouse Interaction" is enabled. Try increasing the interaction radius and sensitivity.
+                        </li>
+                        <li>
+                            <strong>Camera Controls Not Working:</strong> Ensure panning, zoom, speed, and pan values are set to non-zero preferences.
+                        </li>
+                        <li>
+                            <strong>Strokes Not Visible:</strong> Make sure your SVG has actual path strokes. If your SVG has no original fills, it may have more obvious stroke styles.
+                        </li>
+                        <li>
+                            <strong>Slow Performance:</strong> Reduce particle count, disable glow effects, or use simpler SVGs to improve performance. Enable "High Performance Mode" for complex scenes.
+                        </li>
+                        <li>
+                            <strong>Zoom Effect Too Strong/Weak:</strong> Adjust zoom strength and the return speed to find the right balance for your design.
+                        </li>
+                        <li>
+                            <strong>Rigid Body Not Working:</strong> Ensure values for "Enable Rigid Body" is possible. Try increasing the force strength and adjusting the position of the collider.
+                        </li>
+                        <li>
+                            <strong>Glow Not Visible:</strong> Increase bloom strength and reduce white decreasing threshold for more noticeable glow effects.
+                        </li>
+                        <li>
+                            <strong>GIF Export Taking Too Long:</strong> Reduce particle count and animation complexity before exporting GIFs for faster processing.
+                        </li>
+                        <li>
+                            <strong>Important Code Not Working:</strong> Make sure to include all required Three.js libraries as listed in the exported code comments.
+                        </li>
+                    </ul>
                 </div>
             </div>
-        </main>
+        </div>
+
+        <!-- About Page -->
+        <div class="page-content hidden" id="about-page">
+            <div class="about-container">
+                <h2>About SVG Partycle Generator</h2>
+                <p class="about-description">
+                    SVG Partycle Generator is a powerful tool that transforms SVG files into mesmerizing interactive particle animations. Built with modern web technologies, it offers designers and developers a simple way to create engaging visual effects.
+                </p>
+                
+                <p class="about-description">
+                    The generator uses Three.js for WebGL-powered rendering, allowing for high-performance animations even with thousands of particles. Each SVG is carefully analyzed and converted into particles while preserving its visual form.
+                </p>
+                
+                <div class="features-container">
+                    <h3>Advanced Features</h3>
+                    <div class="features-grid">
+                        <div class="feature-item">
+                            <i class="fas fa-check"></i>
+                            <span>Multi-layer SVG support with layer management</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check"></i>
+                            <span>3D positioning and rotation of individual layers</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check"></i>
+                            <span>Rigid body physics with force-based collisions</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check"></i>
+                            <span>Gradient rotation control</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check"></i>
+                            <span>High-performance instanced rendering mode</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check"></i>
+                            <span>Original SVG color preservation</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check"></i>
+                            <span>3D particle rendering with depth control</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check"></i>
+                            <span>Physics-based mouse interaction with attraction and repulsion</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check"></i>
+                            <span>Send collider physics with return-to-origin behavior</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check"></i>
+                            <span>Customizable camera orbit controls</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check"></i>
+                            <span>Perlin noise algorithms for organic movement</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check"></i>
+                            <span>Custom gradient and color theme support</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check"></i>
+                            <span>Real-time SVG scaling and transformation</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check"></i>
+                            <span>Random particle sizing for more natural effects</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check"></i>
+                            <span>Export functionality for code, screenshots and GIFs</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check"></i>
+                            <span>Customizable animation parameters</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check"></i>
+                            <span>True circular particles with glow effects</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check"></i>
+                            <span>Enhanced 3D depth visualization</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check"></i>
+                            <span>SVG stroke and fill support with detailed controls</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check"></i>
+                            <span>Advanced post-processing bloom effects</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check"></i>
+                            <span>Real-time performance monitoring</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="use-cases">
+                    <h3>Use Cases</h3>
+                    <div class="use-cases-grid">
+                        <div class="use-case-item">
+                            <i class="fas fa-check"></i>
+                            <span>Interactive logo animations for websites</span>
+                        </div>
+                        <div class="use-case-item">
+                            <i class="fas fa-check"></i>
+                            <span>Creative hero sections and backgrounds</span>
+                        </div>
+                        <div class="use-case-item">
+                            <i class="fas fa-check"></i>
+                            <span>Portfolio showcases and presentations</span>
+                        </div>
+                        <div class="use-case-item">
+                            <i class="fas fa-check"></i>
+                            <span>Social media graphics and content</span>
+                        </div>
+                        <div class="use-case-item">
+                            <i class="fas fa-check"></i>
+                            <span>Digital art installations</span>
+                        </div>
+                        <div class="use-case-item">
+                            <i class="fas fa-check"></i>
+                            <span>Educational visualizations</span>
+                        </div>
+                        <div class="use-case-item">
+                            <i class="fas fa-check"></i>
+                            <span>Eye-catching UI elements</span>
+                        </div>
+                        <div class="use-case-item">
+                            <i class="fas fa-check"></i>
+                            <span>Brand identity enhancement</span>
+                        </div>
+                        <div class="use-case-item">
+                            <i class="fas fa-check"></i>
+                            <span>Calligraphy and typography art</span>
+                        </div>
+                        <div class="use-case-item">
+                            <i class="fas fa-check"></i>
+                            <span>Motion graphics intros</span>
+                        </div>
+                        <div class="use-case-item">
+                            <i class="fas fa-check"></i>
+                            <span>Interactive data visualizations</span>
+                        </div>
+                        <div class="use-case-item">
+                            <i class="fas fa-check"></i>
+                            <span>Artistic SVG transformations</span>
+                        </div>
+                        <div class="use-case-item">
+                            <i class="fas fa-check"></i>
+                            <span>Multi-layered composite animations</span>
+                        </div>
+                        <div class="use-case-item">
+                            <i class="fas fa-check"></i>
+                            <span>Animated icons and symbols</span>
+                        </div>
+                        <div class="use-case-item">
+                            <i class="fas fa-check"></i>
+                            <span>Interactive storytelling elements</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="technical-notes">
+                    <h3>Technical Notes</h3>
+                    <p>
+                        This generator works entirely in your browser with no server-side processing. Your SVGs are never uploaded to any server, ensuring your designs remain private and secure.
+                    </p>
+                    <p>
+                        High Performance Mode uses Three.js InstancedMesh for dramatically improved rendering efficiency, allowing you to work with 10,000+ particles smoothly even on modest hardware.
+                    </p>
+                    <p>
+                        The multi-layer system allows for complex compositions while maintaining good performance through optimized rendering techniques and efficient memory management.
+                    </p>
+                    <p>
+                        The generated code is designed to be lightweight and compatible with modern browsers. It requires Three.js and SimplexNoise libraries to function.
+                    </p>
+                </div>
+                
+                <div class="about-footer">
+                    <p>Created with <i class="fas fa-heart"></i> by Enrico Deiana</p>
+                    <p>Version 2.0 © 2023</p>
+                </div>
+            </div>
+        </div>
 
         <footer>
             <p>Designed by <a href="https://enricodeiana.design/" target="_blank">Enrico Deiana</a></p>
