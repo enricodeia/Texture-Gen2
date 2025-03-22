@@ -53,22 +53,6 @@
                     </div>
                     
                     <div class="preview-3d">
-                        <div class="preview-model-controls">
-                            <div class="model-selector">
-                                <button class="model-btn active" data-model="sphere">
-                                    <i class="fas fa-circle"></i>
-                                    <span>Sphere</span>
-                                </button>
-                                <button class="model-btn" data-model="cube">
-                                    <i class="fas fa-cube"></i>
-                                    <span>Cube</span>
-                                </button>
-                                <button class="model-btn" data-model="plane">
-                                    <i class="fas fa-square"></i>
-                                    <span>Plane</span>
-                                </button>
-                            </div>
-                        </div>
                         <div id="model-container"></div>
                         <div class="rotation-controls">
                             <div class="rotation-group">
@@ -165,44 +149,25 @@
                 <div class="export-options">
                     <h3>Export Options</h3>
                     <div class="export-container">
-                        <div class="toggle-switch-container">
-                            <label class="toggle-label" for="export-base">Base Color</label>
-                            <label class="toggle-switch">
-                                <input type="checkbox" id="export-base" checked>
-                                <span class="toggle-slider"></span>
-                            </label>
+                        <div class="export-checkbox">
+                            <input type="checkbox" id="export-base" checked>
+                            <label for="export-base">Base Color</label>
                         </div>
-                        
-                        <div class="toggle-switch-container">
-                            <label class="toggle-label" for="export-normal">Normal</label>
-                            <label class="toggle-switch">
-                                <input type="checkbox" id="export-normal" checked>
-                                <span class="toggle-slider"></span>
-                            </label>
+                        <div class="export-checkbox">
+                            <input type="checkbox" id="export-normal" checked>
+                            <label for="export-normal">Normal</label>
                         </div>
-                        
-                        <div class="toggle-switch-container">
-                            <label class="toggle-label" for="export-roughness">Roughness</label>
-                            <label class="toggle-switch">
-                                <input type="checkbox" id="export-roughness" checked>
-                                <span class="toggle-slider"></span>
-                            </label>
+                        <div class="export-checkbox">
+                            <input type="checkbox" id="export-roughness" checked>
+                            <label for="export-roughness">Roughness</label>
                         </div>
-                        
-                        <div class="toggle-switch-container">
-                            <label class="toggle-label" for="export-displacement">Displacement</label>
-                            <label class="toggle-switch">
-                                <input type="checkbox" id="export-displacement" checked>
-                                <span class="toggle-slider"></span>
-                            </label>
+                        <div class="export-checkbox">
+                            <input type="checkbox" id="export-displacement" checked>
+                            <label for="export-displacement">Displacement</label>
                         </div>
-                        
-                        <div class="toggle-switch-container">
-                            <label class="toggle-label" for="export-ao">Ambient Occlusion</label>
-                            <label class="toggle-switch">
-                                <input type="checkbox" id="export-ao" checked>
-                                <span class="toggle-slider"></span>
-                            </label>
+                        <div class="export-checkbox">
+                            <input type="checkbox" id="export-ao" checked>
+                            <label for="export-ao">Ambient Occlusion</label>
                         </div>
                     </div>
                 </div>
@@ -299,10 +264,7 @@
                                 <strong>Upload Image:</strong> Click "Browse Files" or drag-and-drop your image
                             </li>
                             <li>
-                                <strong>3D Preview:</strong> View your texture applied to a 3D model in real-time
-                            </li>
-                            <li>
-                                <strong>Model Selection:</strong> Choose between sphere, cube, and plane views
+                                <strong>3D Preview:</strong> View your texture applied to a 3D sphere in real-time
                             </li>
                             <li>
                                 <strong>Rotation:</strong> Control the 3D model rotation manually or enable auto-rotate
@@ -340,7 +302,7 @@
                             </li>
                             <li>
                                 <strong>Export All Maps as ZIP</strong>
-                                <p>Click the "Export All Maps as ZIP" button to download all selected maps in a single ZIP archive. Toggle which maps to include using the switches in the Export Options section.</p>
+                                <p>Click the "Export All Maps as ZIP" button to download all selected maps in a single ZIP archive. Check or uncheck the map types in the Export Options section.</p>
                             </li>
                             <li>
                                 <strong>Export Three.js Code</strong>
@@ -348,7 +310,7 @@
                             </li>
                             <li>
                                 <strong>Export Options</strong>
-                                <p>Use the toggle switches to select which maps you want to include when exporting the ZIP file. All enabled maps will be included in the export.</p>
+                                <p>Use the checkboxes to select which maps you want to include when exporting the ZIP file. All checked maps will be included in the export.</p>
                             </li>
                         </ul>
                     </div>
@@ -388,9 +350,6 @@
                             <strong>Adjust Map Strength:</strong> Use the sliders to fine-tune each map's intensity for your specific texture.
                         </li>
                         <li>
-                            <strong>Try Different Models:</strong> Switch between sphere, cube, and plane views to see how your texture works on different geometries.
-                        </li>
-                        <li>
                             <strong>Light Position:</strong> Adjust the light position to better evaluate how your material reacts to different lighting conditions.
                         </li>
                         <li>
@@ -422,7 +381,7 @@
                         </div>
                         <div class="feature-item">
                             <i class="fas fa-check"></i>
-                            <span>Real-time 3D preview with multiple geometry options</span>
+                            <span>Real-time 3D preview with interactive rotation</span>
                         </div>
                         <div class="feature-item">
                             <i class="fas fa-check"></i>
