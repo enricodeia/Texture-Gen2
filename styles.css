@@ -235,24 +235,43 @@ main {
 .rotation-group {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 15px;
+    width: 100%;
+    max-width: 90%;
 }
 
 .rotation-group label {
     font-size: 0.85rem;
     color: var(--text-primary);
     font-weight: 600;
+    white-space: nowrap;
 }
 
-.rotation-buttons {
+.rotation-sliders {
     display: flex;
-    gap: 5px;
+    gap: 10px;
+    align-items: center;
+    width: 100%;
+}
+
+.rotation-slider {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+}
+
+.rotation-slider span {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+    width: 15px;
 }
 
 .rotation-btn {
-    background-color: var(--bg-light);
+    background-color: var(--primary-blue);
     color: var(--text-primary);
-    border: 1px solid var(--border-color);
+    border: none;
     width: 32px;
     height: 32px;
     border-radius: 4px;
@@ -264,12 +283,16 @@ main {
 }
 
 .rotation-btn:hover {
-    background-color: var(--primary-blue);
+    background-color: #388bfd;
     transform: translateY(-2px);
 }
 
 .rotation-btn:active {
     transform: translateY(0);
+}
+
+.rotation-btn.active {
+    background-color: var(--primary-green);
 }
 
 .rotation-btn i {
