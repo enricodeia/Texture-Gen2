@@ -179,32 +179,29 @@ main {
     display: block;
 }
 
-.change-btn {
+.delete-btn {
     position: absolute;
-    bottom: 0.75rem;
-    right: 0.75rem;
-    background-color: var(--primary-blue);
+    top: 0.5rem;
+    right: 0.5rem;
+    background-color: var(--danger-color);
     color: var(--text-primary);
     border: none;
     padding: 0.4rem 0.8rem;
     border-radius: 4px;
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
     cursor: pointer;
     z-index: 4;
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     font-weight: 600;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    opacity: 0.9;
     transition: all 0.2s;
 }
 
-.change-btn:hover {
-    background-color: #388bfd;
+.delete-btn:hover {
+    opacity: 1;
     transform: translateY(-2px);
 }
 
-.change-btn:active {
+.delete-btn:active {
     transform: translateY(0);
 }
 
@@ -216,12 +213,67 @@ main {
     overflow: hidden;
     position: relative;
     border: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
 }
 
 #sphere-container {
     width: 100%;
-    height: 100%;
+    height: calc(100% - 50px);
     position: relative;
+}
+
+.rotation-controls {
+    padding: 8px;
+    background-color: rgba(1, 4, 9, 0.7);
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.rotation-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.rotation-group label {
+    font-size: 0.85rem;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.rotation-buttons {
+    display: flex;
+    gap: 5px;
+}
+
+.rotation-btn {
+    background-color: var(--bg-light);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.rotation-btn:hover {
+    background-color: var(--primary-blue);
+    transform: translateY(-2px);
+}
+
+.rotation-btn:active {
+    transform: translateY(0);
+}
+
+.rotation-btn i {
+    font-size: 0.9rem;
 }
 
 /* Controls */
@@ -237,55 +289,12 @@ main {
     font-weight: 600;
     color: var(--text-primary);
     font-size: 1.1rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.controls-container h3::before, .export-options h3::before {
-    content: "";
-    display: inline-block;
-    width: 3px;
-    height: 18px;
-    background-color: var(--primary-blue);
-    border-radius: 2px;
 }
 
 .controls-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 0.75rem;
-}
-
-/* Tooltip for controls */
-.control-group {
-    position: relative;
-}
-
-.control-group label::after {
-    content: attr(data-tooltip);
-    position: absolute;
-    background-color: var(--bg-darker);
-    color: var(--text-primary);
-    padding: 0.5rem 0.75rem;
-    border-radius: 4px;
-    font-size: 0.8rem;
-    top: -40px;
-    left: 50%;
-    transform: translateX(-50%);
-    white-space: nowrap;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.2s, visibility 0.2s;
-    z-index: 100;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-    border: 1px solid var(--border-color);
-    pointer-events: none;
-}
-
-.control-group:hover label::after {
-    opacity: 1;
-    visibility: visible;
 }
 
 .light-group {
@@ -453,13 +462,6 @@ input[type="range"]::-moz-range-thumb:hover {
     padding: 0.75rem;
     position: relative;
     border: 1px solid var(--border-color);
-    transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.map-preview:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    border-color: var(--primary-blue);
 }
 
 .map-header {
