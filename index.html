@@ -14,24 +14,17 @@
                 <h1>Texture Gen v2</h1>
                 <p>Create professional PBR texture maps instantly</p>
             </div>
-            <div class="nav-tabs">
-                <button class="nav-tab active" data-page="generator">Generator</button>
-                <button class="nav-tab" data-page="help">Help</button>
-                <button class="nav-tab" data-page="about">About</button>
-            </div>
             <div class="nav-actions">
-                <button id="export-zip" class="export-btn">
+                <button id="export-zip" class="action-btn">
                     <i class="fas fa-file-archive"></i> Export All Maps as ZIP
                 </button>
-                <button id="export-threejs" class="export-btn">
+                <button id="export-threejs" class="action-btn">
                     <i class="fas fa-code"></i> Export Three.js Code
                 </button>
             </div>
         </nav>
 
         <main>
-            <!-- Generator Page -->
-            <div id="generator-page" class="page active-page">
             <div class="top-container">
                 <div class="upload-section">
                     <div class="upload-area" id="upload-area">
@@ -52,18 +45,19 @@
                 <div class="preview-3d">
                     <div id="sphere-container"></div>
                     <div class="rotation-controls">
-                        <div class="rotation-sliders">
-                            <div class="rotation-slider">
-                                <span>X Rotation</span>
-                                <input type="range" id="rotation-x" min="-3.14" max="3.14" step="0.01" value="0">
+                        <div class="rotation-group">
+                            <label>Manual Rotation:</label>
+                            <div class="rotation-sliders">
+                                <div class="rotation-slider">
+                                    <span>X</span>
+                                    <input type="range" id="rotation-x" min="-3.14" max="3.14" step="0.01" value="0">
+                                </div>
+                                <div class="rotation-slider">
+                                    <span>Y</span>
+                                    <input type="range" id="rotation-y" min="-3.14" max="3.14" step="0.01" value="0">
+                                </div>
+                                <button id="toggle-auto-rotate" class="rotation-btn" title="Toggle Auto-Rotation"><i class="fas fa-sync-alt"></i></button>
                             </div>
-                            <div class="rotation-slider">
-                                <span>Y Rotation</span>
-                                <input type="range" id="rotation-y" min="-3.14" max="3.14" step="0.01" value="0">
-                            </div>
-                            <button id="toggle-auto-rotate" class="control-btn">
-                                <i class="fas fa-sync-alt"></i> Auto-Rotate
-                            </button>
                         </div>
                     </div>
                 </div>
@@ -93,89 +87,6 @@
                         <div class="slider-container">
                             <input type="range" id="roughness-strength" min="0" max="1" step="0.01" value="0.5">
                             <span class="value" id="roughness-value">0.5</span>
-                        </div>
-                    </div>
-                    
-                    <div class="control-group">
-                        <label for="displacement-strength">Displacement Strength</label>
-                        <div class="slider-container">
-                            <input type="range" id="displacement-strength" min="0" max="1" step="0.01" value="0.2">
-                            <span class="value" id="displacement-value">0.2</span>
-                        </div>
-                    </div>
-                    
-                    <div class="control-group">
-                        <label for="ao-strength">AO Strength</label>
-                        <div class="slider-container">
-                            <input type="range" id="ao-strength" min="0" max="1" step="0.01" value="0.5">
-                            <span class="value" id="ao-value">0.5</span>
-                        </div>
-                    </div>
-                    
-                    <div class="control-group">
-                        <label for="metalness">Metalness</label>
-                        <div class="slider-container">
-                            <input type="range" id="metalness" min="0" max="1" step="0.01" value="0">
-                            <span class="value" id="metalness-value">0.0</span>
-                        </div>
-                    </div>
-                    
-                    <div class="control-group light-group">
-                        <label>Light Position</label>
-                        <div class="light-controls">
-                            <div class="light-control">
-                                <span>X</span>
-                                <input type="range" id="light-x" min="-10" max="10" step="0.1" value="5">
-                            </div>
-                            <div class="light-control">
-                                <span>Y</span>
-                                <input type="range" id="light-y" min="-10" max="10" step="0.1" value="5">
-                            </div>
-                            <div class="light-control">
-                                <span>Z</span>
-                                <input type="range" id="light-z" min="-10" max="10" step="0.1" value="5">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="controls-container">
-                <h3>Texture Mapping</h3>
-                <div class="controls-grid">
-                    <div class="control-group">
-                        <label for="texture-repeat-x">Repeat X</label>
-                        <div class="slider-container">
-                            <input type="range" id="texture-repeat-x" min="0.5" max="10" step="0.1" value="1">
-                            <span class="value" id="repeat-x-value">1.0</span>
-                        </div>
-                    </div>
-                    
-                    <div class="control-group">
-                        <label for="texture-repeat-y">Repeat Y</label>
-                        <div class="slider-container">
-                            <input type="range" id="texture-repeat-y" min="0.5" max="10" step="0.1" value="1">
-                            <span class="value" id="repeat-y-value">1.0</span>
-                        </div>
-                    </div>
-                    
-                    <div class="control-group">
-                        <label for="texture-offset-x">Offset X</label>
-                        <div class="slider-container">
-                            <input type="range" id="texture-offset-x" min="-1" max="1" step="0.01" value="0">
-                            <span class="value" id="offset-x-value">0.0</span>
-                        </div>
-                    </div>
-                    
-                    <div class="control-group">
-                        <label for="texture-offset-y">Offset Y</label>
-                        <div class="slider-container">
-                            <input type="range" id="texture-offset-y" min="-1" max="1" step="0.01" value="0">
-                            <span class="value" id="offset-y-value">0.0</span>
-                        </div>
-                    </div>
-                </div>
-            </div> class="value" id="roughness-value">0.5</span>
                         </div>
                     </div>
                     
@@ -294,107 +205,6 @@
                         </button>
                     </div>
                     <canvas id="ao-map"></canvas>
-                </div>
-            </div>
-            
-            <!-- Help Page -->
-            <div id="help-page" class="page">
-                <div class="content-section">
-                    <h2>How to Use Texture Gen v2</h2>
-                    
-                    <div class="help-section">
-                        <h3>1. Uploading a Texture</h3>
-                        <p>Start by uploading a base texture image using the drop area or Browse Files button. The application supports JPG, PNG, and WebP formats.</p>
-                    </div>
-                    
-                    <div class="help-section">
-                        <h3>2. Texture Maps Generation</h3>
-                        <p>Once uploaded, the app automatically generates the following PBR texture maps:</p>
-                        <ul>
-                            <li><strong>Base Color Map:</strong> The original texture with adjustable intensity</li>
-                            <li><strong>Normal Map:</strong> Creates surface detail without geometry</li>
-                            <li><strong>Roughness Map:</strong> Controls how rough or smooth the surface appears</li>
-                            <li><strong>Displacement Map:</strong> Creates actual geometric displacement</li>
-                            <li><strong>Ambient Occlusion Map:</strong> Adds shadowing in crevices</li>
-                        </ul>
-                    </div>
-                    
-                    <div class="help-section">
-                        <h3>3. Adjusting Settings</h3>
-                        <p>Use the sliders to fine-tune each texture map:</p>
-                        <ul>
-                            <li>Adjust strength values for each map type</li>
-                            <li>Change metalness to make surfaces appear more metallic</li>
-                            <li>Modify light position to see how lighting affects your textures</li>
-                        </ul>
-                    </div>
-                    
-                    <div class="help-section">
-                        <h3>4. Texture Mapping Controls</h3>
-                        <p>Perfect how your texture wraps on the 3D preview:</p>
-                        <ul>
-                            <li>Use Repeat X/Y to control tiling frequency</li>
-                            <li>Adjust Offset X/Y to position the texture precisely</li>
-                            <li>These settings affect all generated maps uniformly</li>
-                        </ul>
-                    </div>
-                    
-                    <div class="help-section">
-                        <h3>5. 3D Preview Controls</h3>
-                        <p>Inspect your texture from all angles:</p>
-                        <ul>
-                            <li>Use the X and Y rotation sliders to rotate the sphere</li>
-                            <li>Toggle auto-rotation with the rotation button</li>
-                        </ul>
-                    </div>
-                    
-                    <div class="help-section">
-                        <h3>6. Exporting</h3>
-                        <p>Export your texture maps in several ways:</p>
-                        <ul>
-                            <li>Download individual maps using their download buttons</li>
-                            <li>Export all maps together as a ZIP file</li>
-                            <li>Get ready-to-use Three.js code that implements your material</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- About Page -->
-            <div id="about-page" class="page">
-                <div class="content-section">
-                    <h2>About Texture Gen v2</h2>
-                    
-                    <div class="about-section">
-                        <h3>Version</h3>
-                        <p>Texture Gen v2.0 - Released March 2025</p>
-                    </div>
-                    
-                    <div class="about-section">
-                        <h3>Description</h3>
-                        <p>Texture Gen is a powerful web-based PBR texture generator. It enables you to create professional texture map sets from a single source image. The application uses advanced image processing algorithms to generate normal, roughness, displacement, and ambient occlusion maps that deliver realistic materials for 3D rendering.</p>
-                    </div>
-                    
-                    <div class="about-section">
-                        <h3>Features</h3>
-                        <ul>
-                            <li>Instant PBR texture map generation</li>
-                            <li>Real-time 3D preview</li>
-                            <li>Customizable texture mapping settings</li>
-                            <li>Three.js code export</li>
-                            <li>Batch export as ZIP</li>
-                        </ul>
-                    </div>
-                    
-                    <div class="about-section">
-                        <h3>Technologies</h3>
-                        <p>Built with HTML5, CSS3, JavaScript, and Three.js</p>
-                    </div>
-                    
-                    <div class="about-section">
-                        <h3>Credits</h3>
-                        <p>Designed by <a href="https://enricodeiana.design/" target="_blank">Enrico Deiana</a></p>
-                    </div>
                 </div>
             </div>
         </main>
