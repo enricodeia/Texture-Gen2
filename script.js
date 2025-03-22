@@ -1,4 +1,12 @@
-// Wait until everything is fully loaded
+// DOM Elements for texture mapping
+    const textureRepeatX = document.getElementById('texture-repeat-x');
+    const textureRepeatY = document.getElementById('texture-repeat-y');
+    const textureOffsetX = document.getElementById('texture-offset-x');
+    const textureOffsetY = document.getElementById('texture-offset-y');
+    const repeatXValue = document.getElementById('repeat-x-value');
+    const repeatYValue = document.getElementById('repeat-y-value');
+    const offsetXValue = document.getElementById('offset-x-value');
+    const offsetYValue = document.getElementById('offset-y-value');// Wait until everything is fully loaded
 document.addEventListener('DOMContentLoaded', function() {
     
     // Global variables
@@ -327,6 +335,12 @@ document.addEventListener('DOMContentLoaded', function() {
         rotationX.addEventListener('input', updateRotation);
         rotationY.addEventListener('input', updateRotation);
         toggleAutoRotateBtn.addEventListener('click', toggleAutoRotation);
+        
+        // Texture mapping controls
+        textureRepeatX.addEventListener('input', updateTextureMapping);
+        textureRepeatY.addEventListener('input', updateTextureMapping);
+        textureOffsetX.addEventListener('input', updateTextureMapping);
+        textureOffsetY.addEventListener('input', updateTextureMapping);
     }
     
     // Clear the uploaded image
@@ -983,6 +997,46 @@ document.addEventListener('DOMContentLoaded', function() {
         // Apply rotation from sliders
         sphere.rotation.x = parseFloat(rotationX.value);
         sphere.rotation.y = parseFloat(rotationY.value);
+    }
+    
+    // Update texture mapping (repeat and offset)
+    function updateTextureMapping() {
+        // Update value displays
+        repeatXValue.textContent = parseFloat(textureRepeatX.value).toFixed(1);
+        repeatYValue.textContent = parseFloat(textureRepeatY.value).toFixed(1);
+        offsetXValue.textContent = parseFloat(textureOffsetX.value).toFixed(2);
+        offsetYValue.textContent = parseFloat(textureOffsetY.value).toFixed(2);
+        
+        // Apply to all textures if they exist
+        const textures = [baseTexture, normalTexture, roughnessTexture, displacementTexture, aoTexture];
+        
+        textures.forEach(texture => {
+            if (texture) {
+                // Set repeat
+                texture.repeat.set(
+                    parseFloat(textureRepeatX.value),
+                    parseFloat(textureRepeatY.value)
+                );
+                
+                // Set offset
+                texture.offset.set(
+                    parseFloat(textureOffsetX.value),
+                    parseFloat(textureOffsetY.value)
+                );
+                
+                // Ensure wrapping is set
+                texture.wrapS = THREE.RepeatWrapping;
+                texture.wrapT = THREE.RepeatWrapping;
+                
+                // Update the texture
+                texture.needsUpdate = true;
+            }
+        });
+        
+        // Update the material
+        if (sphere && sphere.material) {
+            sphere.material.needsUpdate = true;
+        }
     }
     
     // Export Three.js code
