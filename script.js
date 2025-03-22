@@ -3,9 +3,10 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Global variables
     let scene, camera, renderer, sphere, light;
-    let baseTexture, normalTexture, roughnessTexture, displacementTexture, aoTexture, opacityTexture;
+    let baseTexture, normalTexture, roughnessTexture, displacementTexture, aoTexture;
     let originalImageData;
     let hasUploadedImage = false;
+    let currentFile = null; // Store the current file reference
     
     // DOM Elements
     const uploadArea = document.getElementById('upload-area');
@@ -13,7 +14,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const textureUpload = document.getElementById('texture-upload');
     const previewOverlay = document.getElementById('preview-overlay');
     const uploadedImage = document.getElementById('uploaded-image');
-    const deleteImageBtn = document.getElementById('delete-image');
+    const changeImageBtn = document.getElementById('change-image');
     const sphereContainer = document.getElementById('sphere-container');
     
     // Canvas Elements
@@ -22,7 +23,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const roughnessCanvas = document.getElementById('roughness-map');
     const displacementCanvas = document.getElementById('displacement-map');
     const aoCanvas = document.getElementById('ao-map');
-    const opacityCanvas = document.getElementById('opacity-map');
     
     // Control Elements
     const baseStrength = document.getElementById('base-strength');
@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const displacementStrength = document.getElementById('displacement-strength');
     const aoStrength = document.getElementById('ao-strength');
     const metalness = document.getElementById('metalness');
-    const opacityThreshold = document.getElementById('opacity-threshold');
+    const textureScale = document.getElementById('texture-scale');
     const lightX = document.getElementById('light-x');
     const lightY = document.getElementById('light-y');
     const lightZ = document.getElementById('light-z');
@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const displacementValue = document.getElementById('displacement-value');
     const aoValue = document.getElementById('ao-value');
     const metalnessValue = document.getElementById('metalness-value');
-    const opacityValue = document.getElementById('opacity-value');
+    const scaleValue = document.getElementById('scale-value');
     
     // Download buttons
     const downloadBase = document.getElementById('download-base');
@@ -51,7 +51,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const downloadRoughness = document.getElementById('download-roughness');
     const downloadDisplacement = document.getElementById('download-displacement');
     const downloadAO = document.getElementById('download-ao');
-    const downloadOpacity = document.getElementById('download-opacity');
     const exportZip = document.getElementById('export-zip');
     
     // Export options
@@ -60,7 +59,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const exportRoughness = document.getElementById('export-roughness');
     const exportDisplacement = document.getElementById('export-displacement');
     const exportAO = document.getElementById('export-ao');
-    const exportOpacity = document.getElementById('export-opacity');
     
     // Initialize the application
     init();
@@ -179,7 +177,17 @@ document.addEventListener('DOMContentLoaded', function() {
         material.roughnessMap = roughnessTexture;
         material.displacementMap = displacementTexture;
         material.aoMap = aoTexture;
-        material.alphaMap = opacityTexture;
+        
+        // Apply texture scale (repeat)
+        const textureRepeat = parseFloat(textureScale.value);
+        [material.map, material.normalMap, material.roughnessMap, 
+         material.displacementMap, material.aoMap].forEach(tex => {
+            if (tex) {
+                tex.wrapS = THREE.RepeatWrapping;
+                tex.wrapT = THREE.RepeatWrapping;
+                tex.repeat.set(textureRepeat, textureRepeat);
+            }
+        });
         
         // Update material parameters
         if (normalTexture) {
@@ -240,12 +248,34 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Set up event listeners
     function setupEventListeners() {
-        // File upload via input
-        textureUpload.addEventListener('change', handleFileUpload);
+        // Completely revamped file upload handling to fix the first-click issue
         
-        // FIX for file upload bug: Stop propagation on the input click
+        // Direct file input handler
+        textureUpload.addEventListener('change', function(e) {
+            if (this.files && this.files[0]) {
+                currentFile = this.files[0];
+                processUploadedFile(currentFile);
+            }
+        });
+        
+        // Make sure click events don't propagate wrong
         textureUpload.addEventListener('click', function(e) {
             e.stopPropagation();
+        });
+        
+        // Better click delegation for the upload area
+        uploadArea.addEventListener('click', function(e) {
+            // Don't propagate from preview overlay
+            if (e.target.closest('.preview-overlay')) {
+                return;
+            }
+            
+            // Either click was on upload-content or bubbled up from it
+            if (!hasUploadedImage || e.target.closest('.upload-content')) {
+                // Use a timeout to avoid event handling conflicts
+                textureUpload.value = ""; // Clear previous value to ensure change event fires
+                setTimeout(() => textureUpload.click(), 50);
+            }
         });
         
         // Drag and drop events
@@ -263,27 +293,17 @@ document.addEventListener('DOMContentLoaded', function() {
             uploadArea.classList.remove('active');
             
             if (e.dataTransfer.files.length) {
-                processUploadedFile(e.dataTransfer.files[0]);
+                currentFile = e.dataTransfer.files[0];
+                processUploadedFile(currentFile);
             }
         });
         
-        // Fix for the upload content click handler
-        uploadContent.addEventListener('click', (e) => {
-            e.stopPropagation(); // Stop event from bubbling up
-            
-            // Only trigger file input if no image is uploaded yet
-            if (!hasUploadedImage) {
-                // Use setTimeout to avoid event conflicts
-                setTimeout(() => {
-                    textureUpload.click();
-                }, 10);
-            }
-        });
-        
-        // Delete image
-        deleteImageBtn.addEventListener('click', (e) => {
+        // Change image button
+        changeImageBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            clearImage();
+            // Reset file input to make sure change event fires even with same file
+            textureUpload.value = "";
+            setTimeout(() => textureUpload.click(), 50);
         });
         
         // Sliders
@@ -293,7 +313,7 @@ document.addEventListener('DOMContentLoaded', function() {
         displacementStrength.addEventListener('input', updateTextures);
         aoStrength.addEventListener('input', updateTextures);
         metalness.addEventListener('input', updateMaterial);
-        opacityThreshold.addEventListener('input', updateTextures);
+        textureScale.addEventListener('input', updateTextureScale);
         
         // Light position
         lightX.addEventListener('input', updateLightPosition);
@@ -306,48 +326,37 @@ document.addEventListener('DOMContentLoaded', function() {
         downloadRoughness.addEventListener('click', () => downloadTexture(roughnessCanvas, 'roughness-map'));
         downloadDisplacement.addEventListener('click', () => downloadTexture(displacementCanvas, 'displacement-map'));
         downloadAO.addEventListener('click', () => downloadTexture(aoCanvas, 'ao-map'));
-        downloadOpacity.addEventListener('click', () => downloadTexture(opacityCanvas, 'opacity-map'));
         
         // Export ZIP
         exportZip.addEventListener('click', exportAllMapsAsZip);
+        
+        // Add tooltips to controls
+        setupTooltips();
     }
     
-    // Clear the uploaded image
-    function clearImage() {
-        // Reset the UI
-        previewOverlay.style.display = 'none';
-        uploadedImage.src = '';
-        hasUploadedImage = false;
+    // Set up tooltips for controls
+    function setupTooltips() {
+        // Add helpful tooltips to each control
+        const tooltips = {
+            'base-strength': 'Adjust the intensity of the base color',
+            'normal-strength': 'Control the height of surface details',
+            'roughness-strength': 'Adjust how rough or smooth the surface appears',
+            'displacement-strength': 'Control how much geometry is displaced',
+            'ao-strength': 'Enhance or reduce ambient shadows',
+            'metalness': 'Set how metallic the material appears',
+            'texture-scale': 'Adjust how many times the texture repeats across the surface',
+            'light-x': 'Move light left or right',
+            'light-y': 'Move light up or down',
+            'light-z': 'Move light closer or further away'
+        };
         
-        // Remove textures from sphere
-        if (sphere && sphere.material) {
-            sphere.material.map = null;
-            sphere.material.normalMap = null;
-            sphere.material.roughnessMap = null;
-            sphere.material.displacementMap = null;
-            sphere.material.aoMap = null;
-            sphere.material.alphaMap = null;
-            sphere.material.needsUpdate = true;
-        }
-        
-        // Clear canvases
-        clearCanvas(baseCanvas);
-        clearCanvas(normalCanvas);
-        clearCanvas(roughnessCanvas);
-        clearCanvas(displacementCanvas);
-        clearCanvas(aoCanvas);
-        clearCanvas(opacityCanvas);
-        
-        // Reset textures
-        baseTexture = null;
-        normalTexture = null;
-        roughnessTexture = null;
-        displacementTexture = null;
-        aoTexture = null;
-        opacityTexture = null;
-        originalImageData = null;
-        
-        showNotification('Image removed', 'info');
+        // Apply tooltips to labels
+        Object.keys(tooltips).forEach(id => {
+            const label = document.querySelector(`label[for="${id}"]`);
+            if (label) {
+                label.setAttribute('data-tooltip', tooltips[id]);
+            }
+        });
     }
     
     // Clear a canvas
@@ -488,9 +497,6 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Generate ambient occlusion map
         generateAOMap(originalImageData);
-        
-        // Generate opacity map
-        generateOpacityMap(originalImageData);
     }
     
     // Generate base color map (formerly diffuse)
@@ -780,65 +786,29 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log("AO map generated");
     }
     
-    // Generate opacity map
-    function generateOpacityMap(imageData) {
-        // Set canvas dimensions
-        opacityCanvas.width = imageData.width;
-        opacityCanvas.height = imageData.height;
+    // Update texture scale
+    function updateTextureScale() {
+        scaleValue.textContent = parseFloat(textureScale.value).toFixed(1);
         
-        const ctx = opacityCanvas.getContext('2d');
-        const outputData = ctx.createImageData(imageData.width, imageData.height);
+        // Apply scale to all textures
+        const scale = parseFloat(textureScale.value);
         
-        // Default threshold
-        const threshold = parseFloat(opacityThreshold.value) * 255;
-        
-        // Check for alpha channel in original image
-        let hasAlphaChannel = false;
-        for (let i = 3; i < imageData.data.length; i += 4) {
-            if (imageData.data[i] < 250) { // If any pixel has alpha less than ~98%, assume it has alpha channel
-                hasAlphaChannel = true;
-                break;
-            }
+        if (sphere && sphere.material) {
+            const material = sphere.material;
+            
+            // Update texture scaling
+            [material.map, material.normalMap, material.roughnessMap, 
+             material.displacementMap, material.aoMap].forEach(tex => {
+                if (tex) {
+                    tex.wrapS = THREE.RepeatWrapping;
+                    tex.wrapT = THREE.RepeatWrapping;
+                    tex.repeat.set(scale, scale);
+                    tex.needsUpdate = true;
+                }
+            });
+            
+            material.needsUpdate = true;
         }
-        
-        if (hasAlphaChannel) {
-            // Use actual alpha channel
-            for (let i = 0; i < imageData.data.length; i += 4) {
-                const alpha = imageData.data[i + 3];
-                
-                outputData.data[i] = alpha;
-                outputData.data[i + 1] = alpha;
-                outputData.data[i + 2] = alpha;
-                outputData.data[i + 3] = 255; // Always set full alpha for this map
-            }
-        } else {
-            // Generate opacity based on brightness (darker areas more transparent)
-            for (let i = 0; i < imageData.data.length; i += 4) {
-                const r = imageData.data[i];
-                const g = imageData.data[i + 1];
-                const b = imageData.data[i + 2];
-                
-                // Calculate brightness
-                const brightness = Math.round(0.299 * r + 0.587 * g + 0.114 * b);
-                
-                // Binary opacity based on threshold
-                const opacity = brightness > threshold ? 255 : 0;
-                
-                outputData.data[i] = opacity;
-                outputData.data[i + 1] = opacity;
-                outputData.data[i + 2] = opacity;
-                outputData.data[i + 3] = 255; // Always set full alpha for this map
-            }
-        }
-        
-        // Put the processed data back to canvas
-        ctx.putImageData(outputData, 0, 0);
-        
-        // Create opacity texture
-        opacityTexture = new THREE.Texture(opacityCanvas);
-        opacityTexture.needsUpdate = true;
-        
-        console.log("Opacity map generated");
     }
     
     // Update textures based on slider values
@@ -849,12 +819,6 @@ document.addEventListener('DOMContentLoaded', function() {
         roughnessValue.textContent = parseFloat(roughnessStrength.value).toFixed(1);
         displacementValue.textContent = parseFloat(displacementStrength.value).toFixed(1);
         aoValue.textContent = parseFloat(aoStrength.value).toFixed(1);
-        opacityValue.textContent = parseFloat(opacityThreshold.value).toFixed(1);
-        
-        // Regenerate opacity map when threshold changes
-        if (originalImageData) {
-            generateOpacityMap(originalImageData);
-        }
         
         // Check if we need to update the sphere material
         if (sphere && sphere.material) {
@@ -964,10 +928,7 @@ document.addEventListener('DOMContentLoaded', function() {
             exportCount++;
         }
         
-        if (exportOpacity.checked && opacityCanvas) {
-            zip.file(`${textureBaseName}_opacity.png`, dataURLToBlob(opacityCanvas.toDataURL('image/png')), {base64: false});
-            exportCount++;
-        }
+
         
         if (exportCount === 0) {
             if (loadingEl.parentNode) {
